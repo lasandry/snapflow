@@ -21,14 +21,13 @@ function Need($cmd, $wingetId, $label) {
 Need 'node' 'OpenJS.NodeJS.LTS' 'Node.js'
 Need 'ffmpeg' 'Gyan.FFmpeg' 'ffmpeg'
 
-# 2. Ambil/update kode skill (git bila ada, selain itu zip)
+# 2. Ambil/update kode skill: git pull bila dipasang lewat git, clone bila baru, selain itu unduh zip terbaru (timpa)
 if (Test-Path (Join-Path $Dir '.git')) {
-  Write-Host '[..] Update skill...'; git -C $Dir pull --ff-only
-} elseif (Test-Path (Join-Path $Dir 'SKILL.md')) {
-  Write-Host "[ok] Skill sudah ada di $Dir"
-} elseif (Has 'git') {
+  Write-Host '[..] Update skill (git)...'; git -C $Dir pull --ff-only
+} elseif (-not (Test-Path (Join-Path $Dir 'SKILL.md')) -and (Has 'git')) {
   git clone --depth 1 "$Repo.git" $Dir
 } else {
+  Write-Host '[..] Mengunduh versi terbaru...'
   $zip = Join-Path $env:TEMP 'snapflow.zip'; $tmp = Join-Path $env:TEMP 'snapflow-src'
   Invoke-WebRequest "$Repo/archive/refs/heads/main.zip" -OutFile $zip
   if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }

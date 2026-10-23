@@ -1,0 +1,95 @@
+{
+  "name": "Gudang",
+  "description": "Panduan singkat memakai aplikasi Gudang: memantau stok dari dashboard dan mencatat barang masuk.",
+  "lang": "id",
+  "format": { "preset": "youtube" },
+  "brand": { "color": "#c96442" },
+  "zoom": { "enabled": true, "level": 1.8 },
+  "timing": { "typeDelay": 50, "pauseAfterAction": 550, "pauseAfterStep": 900 },
+  "steps": [
+    {
+      "title": "Halaman masuk",
+      "description": "Buka aplikasi Gudang. Halaman pertama yang tampil adalah form masuk.",
+      "narration": "Di video ini kita belajar memantau stok dan mencatat barang masuk di aplikasi Gudang.",
+      "url": "/"
+    },
+    {
+      "title": "Masuk ke aplikasi",
+      "description": "Isi email dan kata sandi akun Anda, lalu klik tombol Masuk.",
+      "narration": "Isi email dan kata sandi, lalu klik Masuk.",
+      "actions": [
+        { "fill": "#email", "value": "${env:DEMO_EMAIL}" },
+        { "fill": "#password", "value": "${env:DEMO_PASSWORD}" },
+        { "click": "#btn-login" },
+        { "expectText": "Total barang" }
+      ]
+    },
+    {
+      "title": "Ringkasan stok",
+      "description": "Dashboard menampilkan empat kartu ringkasan: total barang, stok menipis, barang masuk hari ini, dan pemasok aktif.",
+      "narration": "Dashboard menampilkan ringkasan: total barang, stok menipis, barang masuk hari ini, dan pemasok aktif.",
+      "actions": [
+        { "focus": ".grid", "duration": 1500 }
+      ]
+    },
+    {
+      "title": "Stok menipis",
+      "description": "Kartu stok menipis menunjukkan barang yang perlu segera dipesan ulang.",
+      "narration": "Perhatikan kartu stok menipis. Barang di sini perlu segera dipesan ulang.",
+      "actions": [
+        { "focus": ".grid .stat:nth-child(2)", "duration": 1800 }
+      ]
+    },
+    {
+      "title": "Grafik pergerakan stok",
+      "description": "Grafik menunjukkan jumlah barang masuk setiap bulan.",
+      "narration": "Grafik ini menunjukkan bulan mana barang paling banyak masuk.",
+      "actions": [
+        { "focus": "#bars", "duration": 1600 }
+      ]
+    },
+    {
+      "title": "Barang masuk terbaru",
+      "description": "Daftar di sebelah kanan menampilkan barang yang baru diterima gudang.",
+      "narration": "Di sebelah kanan, ada daftar barang yang baru diterima.",
+      "actions": [
+        { "focus": ".list", "duration": 1500 }
+      ]
+    },
+    {
+      "title": "Tambah barang",
+      "description": "Klik tombol + Tambah Barang untuk mencatat barang masuk.",
+      "narration": "Sekarang kita catat barang baru. Klik Tambah Barang.",
+      "actions": [
+        { "click": "text=+ Tambah Barang" }
+      ]
+    },
+    {
+      "title": "Isi data barang",
+      "description": "Isi nama barang, pilih kategori, dan masukkan jumlahnya.",
+      "narration": "Isi nama barang, pilih kategori, lalu masukkan jumlahnya.",
+      "actions": [
+        { "fill": "#nama", "value": "Laptop Lenovo" },
+        { "select": "#kategori", "value": "Elektronik" },
+        { "fill": "#jumlah", "value": "10" }
+      ]
+    },
+    {
+      "title": "Simpan",
+      "description": "Klik Simpan. Barang baru langsung muncul paling atas di daftar barang.",
+      "narration": "Klik Simpan. Barang baru langsung muncul paling atas.",
+      "actions": [
+        { "click": "#btn-simpan" },
+        { "expectText": "Barang berhasil disimpan" }
+      ]
+    },
+    {
+      "title": "Status barang",
+      "description": "Setiap barang memiliki status: Tersedia, Menipis, atau Baru.",
+      "narration": "Setiap barang punya status, jadi stok mudah dipantau. Selesai, semudah itu!",
+      "actions": [
+        { "focus": "#rows", "duration": 1800 }
+      ]
+    }
+  ]
+}

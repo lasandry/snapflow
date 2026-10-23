@@ -1,0 +1,65 @@
+{
+  "name": "Gudang",
+  "description": "Kelola stok gudang langsung dari HP: pantau stok menipis dan catat barang masuk dalam hitungan detik.",
+  "lang": "id",
+  "brand": { "color": "#c96442" },
+  "zoom": { "enabled": true, "level": 1.8 },
+  "timing": { "typeDelay": 45, "pauseAfterAction": 500, "pauseAfterStep": 900 },
+  "steps": [
+    {
+      "title": "Masuk",
+      "description": "Buka aplikasi Gudang dan masuk dengan email serta kata sandi.",
+      "narration": "Kelola stok gudang cuma dari HP. Masuk dulu ke akunmu.",
+      "url": "/",
+      "actions": [
+        { "fill": "#email", "value": "${env:DEMO_EMAIL}" },
+        { "fill": "#password", "value": "${env:DEMO_PASSWORD}" },
+        { "click": "#btn-login" },
+        { "expectText": "Total barang" }
+      ]
+    },
+    {
+      "title": "Pantau stok",
+      "description": "Dashboard menampilkan total barang, stok menipis, barang masuk hari ini, dan pemasok aktif.",
+      "narration": "Semua angka penting langsung terlihat. Stok menipis? Langsung ketahuan.",
+      "actions": [
+        { "focus": ".grid .stat:nth-child(2)", "duration": 1800 }
+      ]
+    },
+    {
+      "title": "Grafik pergerakan stok",
+      "description": "Grafik menunjukkan jumlah barang masuk setiap bulan.",
+      "narration": "Pergerakan stok tiap bulan juga ada grafiknya.",
+      "actions": [
+        { "focus": "#bars", "duration": 1800 }
+      ]
+    },
+    {
+      "title": "Tambah barang",
+      "description": "Klik tombol + Tambah Barang untuk mencatat barang masuk.",
+      "narration": "Ada barang baru masuk? Klik Tambah Barang.",
+      "actions": [
+        { "click": "text=+ Tambah Barang" }
+      ]
+    },
+    {
+      "title": "Isi data barang",
+      "description": "Isi nama barang, pilih kategori, dan masukkan jumlahnya.",
+      "narration": "Isi nama, pilih kategori, lalu jumlahnya.",
+      "actions": [
+        { "fill": "#nama", "value": "Laptop Lenovo" },
+        { "select": "#kategori", "value": "Elektronik" },
+        { "fill": "#jumlah", "value": "10" }
+      ]
+    },
+    {
+      "title": "Simpan",
+      "description": "Klik Simpan. Barang baru langsung muncul paling atas di daftar barang.",
+      "narration": "Simpan, dan barang langsung tercatat. Semudah itu.",
+      "actions": [
+        { "click": "#btn-simpan" },
+        { "expectText": "Barang berhasil disimpan" }
+      ]
+    }
+  ]
+}

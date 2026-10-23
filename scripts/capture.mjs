@@ -142,10 +142,24 @@ const OVERLAY_SCRIPT = `(() => {
     background:rgba(15,15,20,.85);color:#fff;font:600 clamp(14px,2.4vmin,26px)/1.35 system-ui,sans-serif;
     border-radius:10px;z-index:2147483645;pointer-events:none;text-align:center;transition:opacity .25s}
   .__dr_hl{outline:3px solid #ff3b30 !important;outline-offset:3px !important;border-radius:4px}
+  #__dr_cursor.arrow{width:20px;height:30px;margin:-2px 0 0 -2px;border:0;border-radius:0;background:none;box-shadow:none;
+    filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35))}
+  #__dr_cursor.text{width:12px;height:24px;margin:-12px 0 0 -6px;border:0;border-radius:0;background:none;box-shadow:none}
   html.__dr_clean #__dr_cursor, html.__dr_clean #__dr_caption, html.__dr_clean .__dr_ripple{display:none !important}\`;
   const boot = () => {
     const st = document.createElement('style'); st.textContent = css; document.documentElement.appendChild(st);
     const c = document.createElement('div'); c.id = '__dr_cursor'; document.documentElement.appendChild(c);
+    // desktop: panah ala macOS (ujung panah = posisi mouse), berubah jadi I-beam di atas kolom teks; HP: lingkaran sentuhan
+    const ARROW = '<svg width="20" height="30" viewBox="0 0 20 30"><path d="M2 2v22.5l5.3-5.1 4 9.3 3.7-1.6-4-9.1H18Z" fill="#000" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+    const IBEAM = '<svg width="12" height="24" viewBox="0 0 12 24"><path d="M2.5 2.5c2 0 3.5.6 3.5 2v15c0 1.4-1.5 2-3.5 2M9.5 2.5c-2 0-3.5.6-3.5 2v15c0 1.4 1.5 2 3.5 2M3.5 12h5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><path d="M2.5 2.5c2 0 3.5.6 3.5 2v15c0 1.4-1.5 2-3.5 2M9.5 2.5c-2 0-3.5.6-3.5 2v15c0 1.4 1.5 2 3.5 2M3.5 12h5" fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round"/></svg>';
+    const isText = (el) => !!el && (el.isContentEditable || el.tagName === 'TEXTAREA' ||
+      (el.tagName === 'INPUT' && !/^(button|submit|reset|checkbox|radio|range|color|file|image)$/i.test(el.type)));
+    let shape = '';
+    const setShape = (s) => { if (s === shape) return; shape = s; c.className = s; c.innerHTML = s === 'text' ? IBEAM : ARROW; };
+    if (window.__drArrow) {
+      setShape('arrow');
+      addEventListener('mousemove', (e) => setShape(isText(e.target) ? 'text' : 'arrow'), true);
+    }
     if (window.__drCursorOff) c.style.display = 'none';
     const pos = window.__drPos || {x:-50,y:-50};
     c.style.transform = 'translate(' + pos.x + 'px,' + pos.y + 'px)';
@@ -222,12 +236,15 @@ async function run() {
   const shotsDir = path.join(outDir, 'screenshots');
   fs.mkdirSync(shotsDir, { recursive: true });
   const recordVideo = args.video !== false && flow.video !== false;
+  // supersampling: mode demo direkam 2x resolusi output agar tetap tajam saat auto-zoom (flow "supersample": 1 untuk mematikan)
+  const ss = mode === 'demo' && recordVideo ? Math.max(1, Number(flow.supersample ?? 2)) : 1;
+  const rec = { width: fmt.output.width * ss, height: fmt.output.height * ss };
 
   const { chromium, devices } = loadPlaywright();
   const browser = await chromium.launch({ headless: !args.headed, args: ['--disable-dev-shm-usage'] });
   let ctxOpts = {
     viewport: fmt.viewport,
-    deviceScaleFactor: fmt.deviceScaleFactor,
+    deviceScaleFactor: fmt.deviceScaleFactor * ss,
     isMobile: !!fmt.mobile,
     hasTouch: !!fmt.mobile,
     locale: flow.locale || 'id-ID',
@@ -235,7 +252,7 @@ async function run() {
     colorScheme: flow.colorScheme || 'light',
     ignoreHTTPSErrors: !!flow.ignoreHTTPSErrors,
   };
-  if (fmt.device && devices[fmt.device]) ctxOpts = { ...devices[fmt.device], ...ctxOpts, viewport: fmt.viewport, deviceScaleFactor: fmt.deviceScaleFactor };
+  if (fmt.device && devices[fmt.device]) ctxOpts = { ...devices[fmt.device], ...ctxOpts, viewport: fmt.viewport, deviceScaleFactor: fmt.deviceScaleFactor * ss };
   if (flow.storageState && fs.existsSync(path.resolve(path.dirname(flowPath), flow.storageState))) {
     ctxOpts.storageState = path.resolve(path.dirname(flowPath), flow.storageState);
   }
@@ -244,7 +261,10 @@ async function run() {
   const context = await browser.newContext(ctxOpts);
   const tCtx = Date.now();
   const showOverlay = mode === 'demo' && flow.overlay !== false;
-  if (showOverlay) await context.addInitScript(OVERLAY_SCRIPT);
+  if (showOverlay) {
+    if (!fmt.mobile) await context.addInitScript(() => { window.__drArrow = true; });
+    await context.addInitScript(OVERLAY_SCRIPT);
+  }
   // sembunyikan gangguan (debugbar, banner cookie, overlay dev) + blur data pribadi; aktif di video & screenshot
   const hide = [...(flow.hideDefaults === false ? [] : HIDE_DEFAULTS), ...(flow.hide || [])];
   const blur = flow.mask || [];
@@ -269,8 +289,8 @@ async function run() {
       frames.push({ f, t: Date.now() });
       cdp.send('Page.screencastFrameAck', { sessionId }).catch(() => {});
     });
-    await cdp.send('Page.startScreencast', { format: 'jpeg', quality: Number(flow.videoQuality || 92),
-      maxWidth: fmt.output.width, maxHeight: fmt.output.height, everyNthFrame: 1 });
+    await cdp.send('Page.startScreencast', { format: 'jpeg', quality: Number(flow.videoQuality || 95),
+      maxWidth: rec.width, maxHeight: rec.height, everyNthFrame: 1 });
   }
   page.setDefaultTimeout(Number(flow.timeout || 15000));
   const base = flow.baseUrl || '';
@@ -278,10 +298,9 @@ async function run() {
 
   let mouse = { x: fmt.viewport.width / 2, y: fmt.viewport.height / 2 };
   const sleep = (ms) => page.waitForTimeout(ms);
-  const captionEvents = [];
   const clicks = []; // waktu klik → efek suara di make-video (--sfx)
-  const caption = async (t, isAction = false) => {
-    if (isAction && t) captionEvents.push({ text: t, t: Date.now() });
+  // caption di halaman (hanya dengan --page-captions); di video cukup subtitle narasi
+  const caption = async (t) => {
     if (showOverlay && flow.captions !== false) await page.evaluate((x) => window.__drCaption && window.__drCaption(x), t || '').catch(() => {}); };
 
   async function moveTo(locator) {
@@ -308,7 +327,7 @@ async function run() {
     const [type] = Object.keys(act).filter((k) => !['value', 'options', 'caption', 'nth', 'zoom', 'duration'].includes(k));
     const sel = act[type];
     const loc = () => { const l = page.locator(sel); return act.nth !== undefined ? l.nth(act.nth) : l.first(); };
-    if (act.caption) await caption(act.caption, true);
+    if (act.caption) await caption(act.caption);
     const zStart = Date.now();
     lastFocus = null;
     const urlBefore = page.url();
@@ -396,7 +415,7 @@ async function run() {
   const manifest = {
     name: flow.name || 'Aplikasi', description: flow.description || '', version: flow.version || '',
     brand: flow.brand ? { color: flow.brand.color || null, logo: flow.brand.logo ? path.resolve(path.dirname(flowPath), flow.brand.logo) : null } : null,
-    lang: flow.lang || 'id', mode, format: fmt, generatedAt: new Date().toISOString(),
+    lang: flow.lang || 'id', mode, format: { ...fmt, record: rec }, generatedAt: new Date().toISOString(),
     videoStartOffsetMs: 0, steps: [], video: null, summary: {},
   };
   let firstNavAt = null;
@@ -445,7 +464,6 @@ async function run() {
   const offset = T0 - tCtx;
   manifest.videoStartOffsetMs = 0;
   manifest.zoom = { ...zoomCfg, enabled: zoomCfg.enabled && mode === 'demo' };
-  manifest.captions = captionEvents.map((c) => ({ text: c.text, at: Math.max(0, c.t - tCtx - offset) }));
   manifest.clicks = clicks.map((c) => Math.max(0, c - tCtx - offset));
   manifest.zoomEvents = zoomEvents.map((z) => ({ ...z, start: Math.max(0, z.start - tCtx - offset), end: Math.max(0, z.end - tCtx - offset) }));
   for (const s of manifest.steps) { s.startMs = Math.max(0, s.startMs - tCtx - offset); s.endMs = Math.max(s.startMs, s.endMs - tCtx - offset); }
@@ -461,7 +479,7 @@ async function run() {
     const listFile = path.join(framesDir, 'list.ffconcat');
     fs.writeFileSync(listFile, list.join('\n'));
     const { spawnSync } = await import('node:child_process');
-    const W = fmt.output.width, H = fmt.output.height;
+    const W = rec.width, H = rec.height;
     const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', listFile,
       '-vf', `scale=${W}:${H}:force_original_aspect_ratio=decrease:flags=lanczos,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=white,fps=${fmt.fps},format=yuv420p`,
       '-c:v', 'libx264', '-preset', 'fast', '-crf', '14', path.join(outDir, 'video-raw.mp4')], { stdio: 'inherit' });

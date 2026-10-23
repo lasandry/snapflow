@@ -3,3 +3,5 @@ output/
 .env
 *.ffconcat
 auth.json
+# hasil render Snapflow di folder aplikasi (flow.json tetap ikut)
+**/snapflow/*/

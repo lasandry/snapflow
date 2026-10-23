@@ -11,11 +11,12 @@
  *   --intro "Judul"     kartu judul di awal (default: nama aplikasi; --no-intro untuk mematikan)
  *   --outro "Teks"      kartu penutup
  *   --burn-subs         tanamkan subtitle (judul/deskripsi langkah) ke video
- *   --music lofi        musik latar dibuat otomatis sepanjang video: lofi (default) | corporate | file.mp3 (volume --music-volume 0.12)
- *   --sfx               efek suara "tik" di setiap klik (volume --sfx-volume 0.35)
+ *   --music lofi        musik latar dibuat otomatis sepanjang video: lofi (default) | corporate | file.mp3
+ *                       (volume --music-volume; default 0.9, atau 0.35 + mengecil saat narasi bila ada --voiceover)
+ *   --sfx               efek suara klik mouse di setiap klik (pengali volume --sfx-volume 1)
  *   --clips             juga potong video jadi klip pendek per fitur (mengikuti chapter) untuk Reels/TikTok
  *   --logo logo.png     watermark + logo di kartu & thumbnail (default: brand.logo di flow)
- *   --brand-color #hex  warna kartu, aksen thumbnail, label langkah (default: brand.color di flow)
+ *   --brand-color #hex  warna kartu dan aksen thumbnail (default: brand.color di flow)
  *   --voiceover vo/     narasi per langkah: 00.mp3 = pembuka, 01.mp3 = langkah 1, ... (musik otomatis mengecil saat narasi)
  *   --gif               juga buat preview GIF
  *   --name tutorial     nama file output (tanpa ekstensi)
@@ -57,7 +58,10 @@ const escPath = (p) => p.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, 
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const dir = path.resolve(args._[0] || '.');
+  // root = folder hasil jadi; dir = folder kerja (bahan mentah di root/raw, atau root untuk hasil versi lama)
+  const root = path.resolve(args._[0] || '.');
+  const dir = fs.existsSync(path.join(root, 'raw', 'manifest.json')) ? path.join(root, 'raw') : root;
+  const rel = (f) => path.relative(root, path.join(dir, f)).split(path.sep).join('/');
   const mf = path.join(dir, 'manifest.json');
   if (!fs.existsSync(mf)) { console.error(`manifest.json tidak ada di ${dir}. Jalankan capture.mjs dulu.`); process.exit(1); }
   const m = JSON.parse(fs.readFileSync(mf, 'utf8'));
@@ -80,7 +84,6 @@ function main() {
   const offsetS = (m.videoStartOffsetMs || 0) / 1000;
   const tag = ratio.replace(/[:/]/g, 'x');
   const en = (m.lang || 'id') === 'en';
-  const stepWord = en ? 'Step' : 'Langkah';
   // brand: warna kartu/aksen + logo (flow "brand" atau --brand-color / --logo)
   const brandColor = String(args['brand-color'] || m.brand?.color || '#111827').replace('#', '');
   const logo = [typeof args.logo === 'string' ? path.resolve(args.logo) : null, m.brand?.logo].find((p) => p && fs.existsSync(p)) || null;
@@ -106,27 +109,16 @@ function main() {
       t += d;
     }
   }
-  // caption aksi (mis. "Perhatikan jumlah stok menipis") jadi cue tersendiri
-  for (const c of m.captions || []) {
-    const st = [...m.steps].reverse().find((x) => c.at >= x.startMs);
-    const start = c.at / speed; const end = Math.min(start + 3000, (st ? st.endMs : c.at + 3000) / speed);
-    cues.push({ start, end, text: c.text, action: true });
-  }
-  cues.sort((x, y) => x.start - y.start);
   const toSrt = (shift) => cues.map((c, i) => `${i + 1}\n${srtTime(c.start + shift)} --> ${srtTime(c.end + shift)}\n${c.text}\n`).join('\n');
   // ASS untuk burn-in: ukuran dalam piksel nyata (PlayRes = ukuran video)
   const assTime = (ms) => { const cs = Math.round(ms / 10); return `${Math.floor(cs / 360000)}:${String(Math.floor(cs / 6000) % 60).padStart(2, '0')}:${String(Math.floor(cs / 100) % 60).padStart(2, '0')}.${String(cs % 100).padStart(2, '0')}`; };
   // gaya Netflix: teks putih tebal, outline hitam + bayangan, tanpa kotak; 9:16 dinaikkan agar tidak tertutup UI Reels/TikTok
-  const fsPx = Math.round(H > W ? W * 0.06 : H * 0.055);
+  const fsPx = Math.round(H > W ? W * 0.048 : H * 0.042);
   const ass = `[Script Info]\nScriptType: v4.00+\nPlayResX: ${W}\nPlayResY: ${H}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\n` +
     `Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n` +
-    `Style: Step,Arial,${fsPx},&H00FFFFFF,&H00FFFFFF,&H00000000,&H99000000,-1,0,0,0,100,100,0.5,0,1,${Math.max(2, Math.round(fsPx * 0.045))},${Math.max(1, Math.round(fsPx * 0.04))},2,${Math.round(W * 0.06)},${Math.round(W * 0.06)},${Math.round(H * (H > W ? 0.18 : 0.07))},1\n` +
-    `Style: Action,Arial,${Math.round(fsPx * 0.85)},&H00141418,&H00141418,&H0000C8FF,&H00000000,1,0,0,0,100,100,0,0,3,${Math.round(fsPx * 0.25)},0,8,${Math.round(W * 0.06)},${Math.round(W * 0.06)},${Math.round(H * 0.05)},1\n` +
-    `Style: Badge,Arial,${Math.round(fsPx * 0.55)},&H00FFFFFF,&H00FFFFFF,&H${assColor(brandColor, 0x30)},&H00000000,-1,0,0,0,100,100,0.5,0,3,${Math.round(fsPx * 0.22)},0,7,${Math.round(W * 0.035)},0,${Math.round(H * (H > W ? 0.05 : 0.04))},1\n\n` +
+    `Style: Step,Arial,${fsPx},&H00FFFFFF,&H00FFFFFF,&H00000000,&H99000000,-1,0,0,0,100,100,0.5,0,1,${Math.max(2, Math.round(fsPx * 0.06))},${Math.max(1, Math.round(fsPx * 0.04))},2,${Math.round(W * 0.06)},${Math.round(W * 0.06)},${Math.round(H * (H > W ? 0.18 : 0.07))},1\n` +
     `[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n` +
-    cues.map((c) => `Dialogue: 0,${assTime(c.start)},${assTime(c.end)},${c.action ? 'Action' : 'Step'},,0,0,0,,{\\fad(120,120)}${c.text.replace(/\n/g, '\\N')}`).join('\n') + '\n' +
-    // penanda "Langkah 2/6" di pojok kiri atas
-    (slots.length > 1 ? slots.map((sl, i) => `Dialogue: 0,${assTime(sl.start)},${assTime(sl.end)},Badge,,0,0,0,,${stepWord} ${i + 1}/${slots.length}`).join('\n') + '\n' : '');
+    cues.map((c) => `Dialogue: 0,${assTime(c.start)},${assTime(c.end)},Step,,0,0,0,,{\\fad(120,120)}${c.text.replace(/\n/g, '\\N')}`).join('\n') + '\n';
   const mainSrt = path.join(dir, '.main.ass');
   fs.writeFileSync(mainSrt, ass);
 
@@ -144,9 +136,9 @@ function main() {
     vo.push(`[${clock(sl.start + shift)} – ${clock(sl.end + shift)}] ${sl.title}  → ${String(slots.indexOf(sl) + 1).padStart(2, '0')}.mp3${need > slot ? `  ⚠ terlalu panjang (±${need.toFixed(0)} dtk bicara, slot ${slot.toFixed(0)} dtk)` : ''}`, sl.text, '');
   }
   if (outroText) vo.push(`[penutup]`, outroText, '');
-  fs.writeFileSync(path.join(dir, `voiceover-${ratio.replace(/[:/]/g, 'x')}.txt`), vo.join('\n'));
+  fs.writeFileSync(path.join(root, `voiceover-${ratio.replace(/[:/]/g, 'x')}.txt`), vo.join('\n'));
   // versi teks saja, siap ditempel ke TTS
-  fs.writeFileSync(path.join(dir, 'voiceover-teks.txt'), [introText, ...slots.map((s) => s.text), outroText].filter(Boolean).join('\n\n') + '\n');
+  fs.writeFileSync(path.join(root, 'voiceover-teks.txt'), [introText, ...slots.map((s) => s.text), outroText].filter(Boolean).join('\n\n') + '\n');
 
   // ---------- Filter graph ----------
   const inputs = ['-ss', offsetS.toFixed(3), '-i', src];
@@ -163,12 +155,13 @@ function main() {
       rampOut: Number(args['zoom-ramp'] || m.zoom.rampOut || 0.6),
       pan: Number(m.zoom.pan || 0.5), hold: Number(m.zoom.hold || 0.5),
     });
-    const RW = m.format.output.width, RH = m.format.output.height;
-    // zoompan: ukuran output tetap; input diperbesar 2x agar pan/zoom halus (tanpa getar piksel)
-    const up = args['zoom-quality'] === 'fast' ? 1 : 2;
+    // zoompan dari rekaman resolusi tinggi (supersample) ke ukuran output; rekaman lama (1x) diperbesar 2x agar pan halus
+    const OW = m.format.output.width, OH = m.format.output.height;
+    const RW = m.format.record?.width || OW, RH = m.format.record?.height || OH;
+    const up = args['zoom-quality'] === 'fast' || RW >= OW * 2 ? 1 : 2;
     const zt = (e) => e.replace(/\bt\b/g, 'it');
     f += `,scale=${RW * up}:${RH * up}:flags=lanczos` +
-      `,zoompan=z='${zt(z.z)}':x='clip((${zt(z.cx)})*iw-iw/zoom/2,0,iw-iw/zoom)':y='clip((${zt(z.cy)})*ih-ih/zoom/2,0,ih-ih/zoom)':d=1:s=${RW}x${RH}:fps=${fps}`;
+      `,zoompan=z='${zt(z.z)}':x='clip((${zt(z.cx)})*iw-iw/zoom/2,0,iw-iw/zoom)':y='clip((${zt(z.cy)})*ih-ih/zoom/2,0,ih-ih/zoom)':d=1:s=${OW}x${OH}:fps=${fps}`;
     console.log(`Auto-zoom: ${m.zoomEvents.length} interaksi → ${z.segments} segmen zoom`);
   }
   if (Math.abs(recR - tgtR) < 0.01) {
@@ -217,7 +210,7 @@ function main() {
   if (outroText) { f += card('outro', outroText); seq.push('[outro]'); }
   f += `${seq.join('')}concat=n=${seq.length}:v=1:a=0[v]`;
 
-  const out = path.join(dir, `${name}.mp4`);
+  const out = path.join(root, `${name}.mp4`);
   const cmd = ['-y', '-hide_banner', '-loglevel', 'error', ...inputs];
   // ---------- Audio: musik latar (--music lofi|corporate|file) + voice-over + efek klik (--sfx) ----------
   let audioMap = [];
@@ -235,7 +228,7 @@ function main() {
   }
   if (music) {
     cmd.push('-stream_loop', '-1', '-i', path.resolve(music));
-    aud.push(`[${idx++}:a]${fmtA},volume=${Number(args['music-volume'] || 0.12)},afade=t=in:d=1.5,afade=t=out:st=${Math.max(0, totalS - 2.5).toFixed(2)}:d=2.5[mus]`);
+    aud.push(`[${idx++}:a]${fmtA},volume=${Number(args['music-volume'] || (typeof args.voiceover === 'string' ? 0.35 : 0.9))},afade=t=in:d=1.5,afade=t=out:st=${Math.max(0, totalS - 2.5).toFixed(2)}:d=2.5[mus]`);
   }
   // voice-over per langkah: file 00.* = pembuka, 01.* = langkah 1, 02.* = langkah 2, dst. (mis. 01-login.mp3)
   const vos = [];
@@ -262,11 +255,13 @@ function main() {
     else mixIn.push('[vo]');
   } else if (music) mixIn.push('[mus]');
   if (args.sfx && m.clicks?.length) {
-    // bunyi "tik" lembut disintesis ffmpeg: sinus 1,5 kHz meluruh cepat, di setiap klik
-    const terms = m.clicks.map((c) => { const t0 = (shiftS + c / 1000 / speed).toFixed(3); return `if(between(t,${t0},${t0}+0.08),sin(2*PI*1500*(t-${t0}))*exp(-(t-${t0})*60),0)`; });
-    cmd.push('-f', 'lavfi', '-i', `aevalsrc='${Number(args['sfx-volume'] || 0.35)}*(${terms.join('+')})':s=44100:c=stereo`);
-    aud.push(`[${idx++}:a]anull[sfx]`);
-    mixIn.push('[sfx]');
+    // klik mouse disintesis dari derau: dua letupan sangat pendek (tekan + lepas, jeda 60 ms), difilter 1,5–7 kHz
+    const clickEnv = m.clicks.map((c) => {
+      const a = (shiftS + c / 1000 / speed).toFixed(3);
+      return `if(between(t,${a},${a}+0.012),exp(-(t-${a})*600),0)+0.55*if(between(t,${a}+0.06,${a}+0.07),exp(-(t-${a}-0.06)*800),0)`;
+    });
+    cmd.push('-f', 'lavfi', '-i', `aevalsrc='(random(0)*2-1)*(${clickEnv.join('+')})':s=44100:c=stereo`);
+    aud.push(`[${idx++}:a]highpass=f=1500,lowpass=f=7000,volume=${(1.6 * Number(args['sfx-volume'] || 1)).toFixed(2)}[clk]`); mixIn.push('[clk]');
   }
   if (mixIn.length) {
     // apad: audio tidak pernah lebih pendek dari video (-shortest mengikuti video)
@@ -274,7 +269,7 @@ function main() {
     audioMap = ['-map', '[a]', '-shortest', '-c:a', 'aac', '-b:a', '160k'];
   }
   cmd.push('-filter_complex', f, '-map', '[v]', ...audioMap,
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', String(args.crf || 20), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out);
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', String(args.crf || 17), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out);
   const r = spawnSync('ffmpeg', cmd, { stdio: 'inherit' });
   fs.rmSync(mainSrt, { force: true });
   if (r.status !== 0) { console.error('ffmpeg gagal.'); process.exit(1); }
@@ -282,7 +277,7 @@ function main() {
   console.log(`Subtitle: ${path.join(dir, name + '.srt')}`);
 
   if (args.gif) {
-    const gif = path.join(dir, `${name}.gif`);
+    const gif = path.join(root, `${name}.gif`);
     const gw = Math.min(640, W);
     spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', out, '-vf',
       `fps=10,scale=${gw}:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer`, gif], { stdio: 'inherit' });
@@ -307,7 +302,7 @@ function main() {
   const shots = m.steps.filter((s) => s.screenshot && s.status === 'ok');
   const pick = shots.find((s) => s.index === Number(m.thumbnail)) || shots[Math.min(1, shots.length - 1)];
   if (pick) {
-    const thumb = path.join(dir, `thumbnail-${tag}.jpg`);
+    const thumb = path.join(root, `thumbnail-${tag}.jpg`);
     const tW = H > W ? 1080 : 1280, tH = even(tW * H / W);
     const tfs = Math.round(Math.min(tW, tH) / (H > W ? 9 : 8.5)), tLines = wrap(introText || m.name, H > W ? 14 : 22), tLH = Math.round(tfs * 1.2);
     const band = Math.round(tH * (H > W ? 0.38 : 0.45)), y0 = tH - band;
@@ -322,7 +317,7 @@ function main() {
 
   // ---------- Klip pendek per fitur (--clips), mengikuti chapter ----------
   if (args.clips) {
-    const cd = path.join(dir, `clips-${tag}`);
+    const cd = path.join(root, `clips-${tag}`);
     fs.mkdirSync(cd, { recursive: true });
     chapters.forEach((c, i) => {
       const file = path.join(cd, `${String(i + 1).padStart(2, '0')}-${c.titles[0].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.mp4`);
@@ -331,7 +326,7 @@ function main() {
     });
     console.log(`Klip per fitur: ${cd} (${chapters.length} klip)`);
   }
-  m.outputs ={ ...(m.outputs || {}), [name]: { video: `${name}.mp4`, srt: `${name}.srt`, ratio, width: W, height: H } };
+  m.outputs ={ ...(m.outputs || {}), [name]: { video: `${name}.mp4`, srt: rel(`${name}.srt`), ratio, width: W, height: H } };
   fs.writeFileSync(mf, JSON.stringify(m, null, 2));
 }
 
@@ -387,11 +382,6 @@ function expr(kf) {
   return acc;
 }
 
-// warna hex "rrggbb" → komponen ASS "AABBGGRR" (ASS memakai urutan BGR + alpha terbalik)
-function assColor(hex, alpha = 0) {
-  const h = hex.padStart(6, '0');
-  return [alpha.toString(16).padStart(2, '0'), h.slice(4, 6), h.slice(2, 4), h.slice(0, 2)].join('').toUpperCase();
-}
 const luminance = (hex) => { const n = parseInt(hex.padStart(6, '0'), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
 
 // Pecah teks jadi cue subtitle: per kalimat, maks 2 baris × maxCh karakter per cue.

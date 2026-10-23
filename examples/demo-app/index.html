@@ -1,39 +1,199 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Demo Gudang</title>
+<title>Gudang Demo</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;background:#f3f4f6;color:#111}
-header{background:#1e3a8a;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
-main{max-width:900px;margin:24px auto;padding:0 16px}.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 3px #0001;margin-bottom:16px}
-input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin:4px 0 12px;font:inherit}
-button{background:#2563eb;color:#fff;border:0;padding:10px 18px;border-radius:8px;font:600 15px system-ui;cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.stat b{font-size:26px;display:block}
-table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left}
-.hide{display:none}nav a{color:#fff;margin-left:14px}.toast{background:#dcfce7;color:#166534;padding:10px;border-radius:8px}
+/* palet hangat ala Claude: krem, terracotta, teks hampir hitam */
+:root{--bg:#faf9f5;--panel:#fff;--side:#f5f4ee;--hover:#efede4;--line:#e8e6dc;--text:#141413;--muted:#73726c;--accent:#c96442;--accent-2:#d97757;--soft:#f3e6df;--green:#5a7d3c;--amber:#b7791f}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:14px/1.5 Inter,"Segoe UI",system-ui,sans-serif}
+h1,h2,h3,.serif{font-family:Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.01em}
+.hide{display:none!important}
+svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 14px Inter,"Segoe UI",system-ui,sans-serif;border:1px solid transparent;border-radius:8px;padding:9px 16px;cursor:pointer;background:var(--accent);color:#fff}
+button:hover{background:#b5583a}
+button.outline{background:#fff;color:var(--text);border-color:var(--line)}
+input,select{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;margin:6px 0 14px;color:var(--text)}
+input:focus,select:focus{outline:2px solid #c9644233;border-color:var(--accent)}
+label{display:block;font-weight:500}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px #1414130a}
+.mark{width:32px;height:32px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center}
+.mark svg{width:18px;height:18px}
+
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.login-wrap{width:100%;max-width:400px}
+.login-brand{display:flex;align-items:center;justify-content:center;gap:10px;font-size:22px;margin-bottom:16px}
+.login-card{padding:26px}
+.login-card h1{font-size:24px;margin:0 0 6px}.login-card p{color:var(--muted);margin:0 0 20px}
+.row{display:flex;justify-content:space-between;align-items:baseline}.row a{color:var(--muted);font-size:13px;text-decoration:none}
+.login-card #btn-login{width:100%;margin-top:6px;padding:10px}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;letter-spacing:.06em;margin:20px 0 14px}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.socials{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.terms{text-align:center;color:var(--muted);font-size:13px;margin:18px 0 0}.terms u{text-underline-offset:3px}
+
+/* app */
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+aside{background:var(--side);border-right:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column;gap:2px}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px}.brand b{display:block;font-size:14px}.brand small{color:var(--muted);font-size:12px}
+.group{font-size:12px;color:var(--muted);padding:12px 10px 6px}
+aside a{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none}
+aside a:hover{background:var(--hover)}aside a.on{background:var(--hover);font-weight:600}
+.badge{margin-left:auto;background:var(--accent);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:0 7px}
+.user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px}.user b{display:block;font-size:13px}.user small{color:var(--muted);font-size:12px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+.top{display:flex;align-items:center;gap:22px;padding:12px 28px;border-bottom:1px solid var(--line);background:var(--panel)}
+.top a{color:var(--muted);text-decoration:none}.top a.on{color:var(--text);font-weight:500}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--muted);min-width:240px;background:var(--bg)}
+.search kbd{margin-left:auto;font:600 11px Inter,system-ui;border:1px solid var(--line);border-radius:5px;padding:0 5px;background:#fff}
+.content{padding:28px 40px;max-width:1180px}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:16px}.head h2{margin:0;font-size:30px}.head p{margin:4px 0 0;color:var(--muted)}.head button{margin-left:auto}
+.tabs{display:inline-flex;gap:2px;background:var(--side);border:1px solid var(--line);border-radius:9px;padding:3px;margin-bottom:20px}
+.tabs span{padding:4px 12px;border-radius:6px;color:var(--muted);font-weight:500}.tabs span.on{background:#fff;color:var(--text);box-shadow:0 1px 2px #1414131a}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.stat{padding:20px 22px}.stat .t{display:flex;justify-content:space-between;align-items:center;font-weight:500}.stat .t svg{color:var(--muted)}
+.stat b{display:block;font-family:Georgia,serif;font-weight:500;font-size:32px;margin:16px 0 2px}.stat small{color:var(--muted);font-size:12px}
+.two{display:grid;grid-template-columns:1.45fr 1fr;gap:16px}
+.panel{padding:22px}.panel h3{margin:0 0 4px;font-size:18px}.panel p{color:var(--muted);margin:0 0 18px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:240px;padding-top:10px;border-bottom:1px solid var(--line)}
+.bars div{flex:1;background:var(--accent);border-radius:5px 5px 0 0;opacity:.92}.bars div:nth-child(odd){background:var(--accent-2)}
+.months{display:flex;gap:10px;margin-top:6px}.months span{flex:1;text-align:center;color:var(--muted);font-size:12px}
+.list{display:flex;flex-direction:column;gap:18px}.item{display:flex;align-items:center;gap:12px}.item b{display:block;font-weight:500}.item small{color:var(--muted)}.item em{margin-left:auto;font-style:normal;font-weight:600}
+table{width:100%;border-collapse:collapse}th{font-size:12px;color:var(--muted);text-align:left;font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:12px;border-bottom:1px solid var(--line)}tr:last-child td{border-bottom:0}td:last-child,th:last-child{text-align:right}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;border:1px solid var(--line);border-radius:99px;padding:1px 10px;background:#fff}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.ok{color:var(--green)}.pill.low{color:var(--amber)}.pill.new{color:var(--accent)}
+.toast{display:flex;align-items:center;gap:8px;background:#f1f5ea;color:var(--green);border:1px solid #d9e4cc;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-weight:500}
+.form{padding:24px;max-width:540px}
+
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  aside{flex-direction:row;align-items:center;padding:10px 12px;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto}
+  .brand{padding:0 6px 0 0}.brand small,.group,.user,aside a.extra,.badge{display:none}
+  .top{display:none}.content{padding:18px 16px;min-width:0}.app>div{min-width:0}
+  .head{flex-wrap:wrap}.head h2{font-size:26px}.head button{margin-left:0}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.stat{padding:14px}.stat b{font-size:24px;margin:10px 0 0}.stat small{display:none}
+  .two{grid-template-columns:1fr}.bars{height:150px;gap:5px}.months{gap:5px}.months span{font-size:10px}
+  .tabs span:nth-child(n+3){display:none}
+}
 </style></head><body>
-<header><strong>Gudang Demo</strong><nav id="nav" class="hide"><a href="#dash">Dashboard</a><a href="#barang">Barang</a></nav></header>
-<main>
-<section id="login" class="card"><h2>Masuk</h2>
-<label>Email<input id="email" type="email" placeholder="nama@contoh.id"></label>
-<label>Kata sandi<input id="password" type="password"></label>
-<button id="btn-login">Masuk</button></section>
 
-<section id="dash" class="hide"><div class="card"><h2>Dashboard</h2>
-<div class="grid"><div class="stat card"><b>128</b>Total barang</div><div class="stat card"><b>12</b>Stok menipis</div><div class="stat card"><b>5</b>Barang masuk hari ini</div></div></div>
-<button id="btn-tambah">+ Tambah Barang</button></section>
+<svg style="display:none"><defs>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5M12 13v8"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></symbol>
+  <symbol id="i-in" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+  <symbol id="i-login" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+</defs></svg>
 
-<section id="form" class="card hide"><h2>Tambah Barang</h2>
-<label>Nama barang<input id="nama"></label>
-<label>Kategori<select id="kategori"><option>Elektronik</option><option>ATK</option><option>Furnitur</option></select></label>
-<label>Jumlah<input id="jumlah" type="number"></label>
-<button id="btn-simpan">Simpan</button></section>
+<section id="login">
+  <div class="login-wrap">
+    <div class="login-brand serif"><span class="mark"><svg><use href="#i-box"/></svg></span>Gudang</div>
+    <div class="login-card card">
+      <h1>Masuk</h1>
+      <p>Masukkan email dan kata sandi untuk masuk ke akun gudang Anda.</p>
+      <label>Email<input id="email" type="email" placeholder="nama@contoh.id"></label>
+      <div class="row"><label for="password">Kata sandi</label><a href="#">Lupa kata sandi?</a></div>
+      <input id="password" type="password" placeholder="••••••••">
+      <button id="btn-login"><svg><use href="#i-login"/></svg>Masuk</button>
+      <div class="or">ATAU LANJUTKAN DENGAN</div>
+      <div class="socials"><button class="outline" type="button">Google</button><button class="outline" type="button">Microsoft</button></div>
+      <p class="terms">Dengan masuk, Anda menyetujui <u>Ketentuan Layanan</u> dan <u>Kebijakan Privasi</u>.</p>
+    </div>
+  </div>
+</section>
 
-<section id="barang" class="card hide"><h2>Daftar Barang</h2><div id="toast" class="toast hide">Barang berhasil disimpan</div>
-<table><thead><tr><th>Nama</th><th>Kategori</th><th>Jumlah</th></tr></thead><tbody id="rows"><tr><td>Proyektor</td><td>Elektronik</td><td>4</td></tr></tbody></table></section>
-</main>
+<div id="app" class="app hide">
+  <aside>
+    <div class="brand"><span class="mark"><svg><use href="#i-box"/></svg></span><div><b>Gudang</b><small>Manajemen stok</small></div></div>
+    <div class="group">Umum</div>
+    <a href="#dash" data-go="dash" class="on"><svg><use href="#i-home"/></svg>Dashboard</a>
+    <a href="#barang" data-go="barang"><svg><use href="#i-list"/></svg>Barang <span class="badge">3</span></a>
+    <a href="#" class="extra"><svg><use href="#i-chart"/></svg>Laporan</a>
+    <a href="#" class="extra"><svg><use href="#i-truck"/></svg>Pemasok</a>
+    <div class="group">Lainnya</div>
+    <a href="#" class="extra"><svg><use href="#i-gear"/></svg>Pengaturan</a>
+    <div class="user"><span class="avatar">AG</span><div><b>Admin Gudang</b><small>admin@gudang.id</small></div></div>
+  </aside>
+
+  <div>
+    <div class="top"><a href="#" data-top="dash" class="on">Dashboard</a><a href="#" data-top="barang">Barang</a><a href="#">Laporan</a><a href="#">Pengaturan</a>
+      <div class="search"><svg><use href="#i-search"/></svg>Cari barang… <kbd>Ctrl K</kbd></div><span class="avatar">AG</span></div>
+
+    <main class="content">
+      <section id="dash">
+        <div class="head"><h2>Dashboard</h2><button id="btn-tambah">+ Tambah Barang</button></div>
+        <div class="tabs"><span class="on">Ringkasan</span><span>Analitik</span><span>Laporan</span></div>
+        <div class="grid">
+          <div class="stat card"><div class="t">Total barang<svg><use href="#i-box"/></svg></div><b>128</b><small>+12 dari bulan lalu</small></div>
+          <div class="stat card"><div class="t">Stok menipis<svg><use href="#i-alert"/></svg></div><b>12</b><small>perlu dipesan ulang</small></div>
+          <div class="stat card"><div class="t">Barang masuk hari ini<svg><use href="#i-in"/></svg></div><b>5</b><small>dari 2 pemasok</small></div>
+          <div class="stat card"><div class="t">Pemasok aktif<svg><use href="#i-truck"/></svg></div><b>8</b><small>+1 minggu ini</small></div>
+        </div>
+        <div class="two">
+          <div class="panel card"><h3>Pergerakan stok</h3><p>Jumlah barang masuk per bulan.</p>
+            <div class="bars" id="bars"></div><div class="months" id="months"></div></div>
+          <div class="panel card"><h3>Barang masuk terbaru</h3><p>27 barang masuk bulan ini.</p>
+            <div class="list">
+              <div class="item"><span class="avatar">LP</span><div><b>Laptop Lenovo</b><small>Elektronik</small></div><em>+10</em></div>
+              <div class="item"><span class="avatar">KA</span><div><b>Kertas A4</b><small>ATK</small></div><em>+40</em></div>
+              <div class="item"><span class="avatar">KK</span><div><b>Kursi Kantor</b><small>Furnitur</small></div><em>+6</em></div>
+              <div class="item"><span class="avatar">PE</span><div><b>Proyektor Epson</b><small>Elektronik</small></div><em>+2</em></div>
+            </div></div>
+        </div>
+      </section>
+
+      <section id="form" class="hide">
+        <div class="head"><div><h2>Tambah Barang</h2><p>Lengkapi data barang yang masuk ke gudang.</p></div></div>
+        <div class="form card">
+          <label>Nama barang<input id="nama" placeholder="mis. Laptop Lenovo"></label>
+          <label>Kategori<select id="kategori"><option>Elektronik</option><option>ATK</option><option>Furnitur</option></select></label>
+          <label>Jumlah<input id="jumlah" type="number" placeholder="0"></label>
+          <button id="btn-simpan">Simpan</button>
+        </div>
+      </section>
+
+      <section id="barang" class="hide">
+        <div class="head"><div><h2>Daftar Barang</h2><p>Semua barang yang tercatat di gudang.</p></div></div>
+        <div id="toast" class="toast hide">✓ Barang berhasil disimpan</div>
+        <div class="card">
+          <table><thead><tr><th>Nama</th><th>Kategori</th><th>Status</th><th>Jumlah</th></tr></thead>
+          <tbody id="rows">
+            <tr><td>Proyektor Epson</td><td>Elektronik</td><td><span class="pill ok">Tersedia</span></td><td>4</td></tr>
+            <tr><td>Kertas A4</td><td>ATK</td><td><span class="pill low">Menipis</span></td><td>3</td></tr>
+            <tr><td>Kursi Kantor</td><td>Furnitur</td><td><span class="pill ok">Tersedia</span></td><td>18</td></tr>
+          </tbody></table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
 <script>
-const $=s=>document.querySelector(s);const show=id=>['login','dash','form','barang'].forEach(x=>$('#'+x).classList.toggle('hide',x!==id));
-$('#btn-login').onclick=()=>{if($('#email').value&&$('#password').value){$('#nav').classList.remove('hide');show('dash')}};
-$('#btn-tambah').onclick=()=>show('form');
-$('#btn-simpan').onclick=()=>{const r=document.createElement('tr');r.innerHTML=`<td>${$('#nama').value}</td><td>${$('#kategori').value}</td><td>${$('#jumlah').value}</td>`;$('#rows').prepend(r);show('barang');$('#toast').classList.remove('hide')};
-</script></body></html>
+const $ = (s) => document.querySelector(s);
+const show = (id) => {
+  ['dash', 'form', 'barang'].forEach((x) => $('#' + x).classList.toggle('hide', x !== id));
+  document.querySelectorAll('[data-go]').forEach((a) => a.classList.toggle('on', a.dataset.go === id || (id === 'form' && a.dataset.go === 'barang')));
+  document.querySelectorAll('[data-top]').forEach((a) => a.classList.toggle('on', a.dataset.top === (id === 'form' ? 'barang' : id)));
+};
+document.querySelectorAll('[data-go]').forEach((a) => a.onclick = (e) => { e.preventDefault(); show(a.dataset.go); });
+
+// grafik batang 12 bulan (data tetap agar rekaman konsisten)
+const data = [42, 35, 88, 34, 47, 86, 36, 58, 38, 50, 87, 54];
+$('#bars').innerHTML = data.map((v) => `<div style="height:${v}%"></div>`).join('');
+$('#months').innerHTML = 'Jan Feb Mar Apr Mei Jun Jul Agu Sep Okt Nov Des'.split(' ').map((m) => `<span>${m}</span>`).join('');
+
+$('#btn-login').onclick = () => { if ($('#email').value && $('#password').value) { $('#login').classList.add('hide'); $('#app').classList.remove('hide'); show('dash'); } };
+$('#btn-tambah').onclick = () => show('form');
+$('#btn-simpan').onclick = () => {
+  const r = document.createElement('tr');
+  r.innerHTML = `<td>${$('#nama').value}</td><td>${$('#kategori').value}</td><td><span class="pill new">Baru</span></td><td>${$('#jumlah').value}</td>`;
+  $('#rows').prepend(r); show('barang'); $('#toast').classList.remove('hide');
+};
+</script>
+</body></html>

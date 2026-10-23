@@ -56,7 +56,7 @@
   "description": "Klik tombol ...",         // paragraf penjelasan di dokumen
   "narration": "Sekarang klik ...",         // naskah voice-over & subtitle (default = description)
   "url": "/barang/create",                  // opsional: buka halaman dulu
-  "caption": "Teks caption di halaman",     // default = title
+  "caption": "Teks caption di halaman",     // hanya tampil dengan --page-captions (video cukup subtitle narasi)
   "actions": [ /* aksi */ ],
   "screenshot": true,                       // false = lewati screenshot
   "highlight": "#form-barang",              // opsional, hanya bila user minta: bingkai merah di screenshot (bawaan: tanpa)
@@ -80,7 +80,7 @@
 | `check` / `uncheck` | `{ "check": "#setuju" }` | |
 | `upload` | `{ "upload": "input[type=file]", "value": "contoh.pdf" }` | Path relatif terhadap file flow |
 | `scroll` | `{ "scroll": 600 }` atau `{ "scroll": "#tabel" }` | |
-| `focus` | `{ "focus": ".total", "duration": 2000, "caption": "Total otomatis" }` | Sorot + zoom tanpa klik |
+| `focus` | `{ "focus": ".total", "duration": 2000 }` | Sorot + zoom tanpa klik |
 | `wait` | `{ "wait": 1000 }` | ms |
 | `waitFor` | `{ "waitFor": ".toast" }` | Tunggu elemen terlihat |
 | `waitForUrl` | `{ "waitForUrl": "dashboard" }` | Regex URL |
@@ -89,7 +89,7 @@
 | `eval` | `{ "eval": "localStorage.clear()" }` | JavaScript di halaman |
 | `saveSession` | `{ "saveSession": "auth.json" }` | Simpan cookie/login untuk run berikutnya |
 
-Properti tambahan di setiap aksi: `caption` (teks sorotan di atas video), `zoom` (`false` / angka), `nth` (pilih elemen ke-n), `options` (opsi Playwright untuk click).
+Properti tambahan di setiap aksi: `zoom` (`false` / angka), `nth` (pilih elemen ke-n), `options` (opsi Playwright untuk click).
 
 ## Selector
 

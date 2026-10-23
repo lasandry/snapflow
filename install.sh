@@ -20,14 +20,13 @@ need node node nodejs "Node.js"
 command -v npm >/dev/null || need npm node npm "npm"
 need ffmpeg ffmpeg ffmpeg "ffmpeg"
 
-# 2. Ambil/update kode skill (git bila ada, selain itu tarball)
+# 2. Ambil/update kode skill: git pull bila dipasang lewat git, clone bila baru, selain itu unduh tarball terbaru (timpa)
 if [ -d "$DIR/.git" ]; then
-  echo "[..] Update skill..."; git -C "$DIR" pull --ff-only
-elif [ -f "$DIR/SKILL.md" ]; then
-  echo "[ok] Skill sudah ada di $DIR"
-elif command -v git >/dev/null; then
+  echo "[..] Update skill (git)..."; git -C "$DIR" pull --ff-only
+elif [ ! -f "$DIR/SKILL.md" ] && command -v git >/dev/null; then
   git clone --depth 1 "$REPO.git" "$DIR"
 else
+  echo "[..] Mengunduh versi terbaru..."
   mkdir -p "$DIR"
   curl -fsSL "$REPO/archive/refs/heads/main.tar.gz" | tar -xz -C "$DIR" --strip-components=1
 fi

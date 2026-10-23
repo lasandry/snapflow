@@ -30,7 +30,9 @@ const L = {
 };
 const escHtml = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-const dir = path.resolve(args._[0] || '.');
+// root = folder hasil jadi; dir = folder kerja (bahan mentah di root/raw, atau root untuk hasil versi lama)
+const root = path.resolve(args._[0] || '.');
+const dir = fs.existsSync(path.join(root, 'raw', 'manifest.json')) ? path.join(root, 'raw') : root;
 const m = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
 const t = L[args.lang || m.lang] || L.id;
 const title = args.title || `${t.doc} ${m.name}`;
@@ -84,11 +86,11 @@ for (const s of m.steps) {
   if (s.error) body.push(P(`⚠ ${s.error}`, { run: { color: 'B91C1C' } }));
 }
 const doc = new Document({ creator: 'Snapflow', title, features: { updateFields: true }, styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } }, sections: [{ children: body }] });
-fs.writeFileSync(path.join(dir, 'DOKUMENTASI.docx'), await Packer.toBuffer(doc));
+fs.writeFileSync(path.join(root, 'DOKUMENTASI.docx'), await Packer.toBuffer(doc));
 
 // ---------- HTML ----------
 const img = (p) => {
-  if (!args.embed) return p;
+  if (!args.embed && dir === root) return p; // gambar di raw/ selalu di-embed agar HTML berdiri sendiri
   const b = fs.readFileSync(path.join(dir, p));
   return `data:image/png;base64,${b.toString('base64')}`;
 };
@@ -116,18 +118,18 @@ video{width:100%;${portrait ? 'max-width:380px;' : ''}border-radius:10px;backgro
 <main><h1>${escHtml(title)}</h1>
 ${m.description ? `<p>${escHtml(m.description)}</p>` : ''}
 <div class="meta">${t.gen} · ${escHtml(date)} · ${t.mode}: ${t[m.mode] || m.mode} · ${t.ratio} ${m.format.ratio} · ${m.format.output.width}×${m.format.output.height}</div>
-${videos.length && !args.embed ? `<section class="step"><h2>${t.video}</h2>${videos.map((v) => `<video controls preload="metadata" src="${v.video}">${v.srt ? `<track kind="subtitles" src="${v.srt.replace('.srt', '.vtt')}" default>` : ''}</video><div class="url">${v.video} · ${v.ratio}</div>`).join('')}</section>` : ''}
+${videos.length ? `<section class="step"><h2>${t.video}</h2>${videos.map((v) => `<video controls preload="metadata" src="${v.video}">${v.srt ? `<track kind="subtitles" src="${v.srt.replace('.srt', '.vtt')}" default>` : ''}</video><div class="url">${v.video} · ${v.ratio}</div>`).join('')}</section>` : ''}
 ${isTest ? `<section class="step"><h2>${t.result} — ${m.summary.ok}/${m.summary.total}</h2><table><tr><th>#</th><th>${t.step}</th><th>${t.status}</th><th>${t.error}</th></tr>${m.steps.map((s) => `<tr><td>${s.index}</td><td>${escHtml(s.title)}</td><td class="${s.status === 'ok' ? 'ok' : 'bad'}">${s.status === 'ok' ? t.ok : t.failed}</td><td>${escHtml(s.error || '')}</td></tr>`).join('')}</table></section>` : ''}
 ${m.steps.map((s) => `<section class="step" id="${s.id}"><h2><span class="num">${s.index}</span>${escHtml(s.title)}${s.status !== 'ok' ? `<span class="badge bad">${t.failed}</span>` : ''}</h2>
 ${s.description ? `<p>${escHtml(s.description)}</p>` : ''}
 ${s.screenshot ? `<figure><img loading="lazy" src="${img(s.screenshot)}" alt="${escHtml(s.title)}"></figure>` : ''}
 ${s.error ? `<p class="err">⚠️ ${escHtml(s.error)}</p>` : ''}</section>`).join('\n')}
 </main></div></body></html>`;
-fs.writeFileSync(path.join(dir, 'DOKUMENTASI.html'), html);
+fs.writeFileSync(path.join(root, 'DOKUMENTASI.html'), html);
 
 // SRT → VTT untuk pemutar HTML
 for (const v of videos) {
-  const srt = path.join(dir, v.srt || '');
+  const srt = path.join(root, v.srt || '');
   if (v.srt && fs.existsSync(srt)) fs.writeFileSync(srt.replace(/\.srt$/, '.vtt'), 'WEBVTT\n\n' + fs.readFileSync(srt, 'utf8').replace(/(\d\d:\d\d:\d\d),(\d\d\d)/g, '$1.$2'));
 }
-console.log(`Dokumentasi: ${path.join(dir, 'DOKUMENTASI.docx')}\n             ${path.join(dir, 'DOKUMENTASI.html')}`);
+console.log(`Dokumentasi: ${path.join(root, 'DOKUMENTASI.docx')}\n             ${path.join(root, 'DOKUMENTASI.html')}`);

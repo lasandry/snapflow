@@ -9,7 +9,6 @@
  * Opsi lain diteruskan: --speed, --intro, --outro, --music [lofi|corporate|file], --sfx, --gif, --embed, --headed, --crawl, --no-video
  */
 import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -39,19 +38,20 @@ const node = (script, a) => {
   return r;
 };
 // setiap run → folder baru bertanggal (waktu lokal), hasil lama tidak tertimpa
-const appSlug = (JSON.parse(fs.readFileSync(get('flow'), 'utf8')).name || 'app').replace(/\s+/g, '-').toLowerCase();
 const d = new Date(), p2 = (n) => String(n).padStart(2, '0');
-const runDir = path.join(get('out') || 'output', appSlug, `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}`);
+const runDir = path.join(get('out') || 'output', `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}`);
 let exit = 0;
 for (const t of targets) {
   console.log(`\n=== ${mode.toUpperCase()} ${t.join(' ') || '(format dari flow)'} ===`);
-  const cap = node('capture.mjs', ['--flow', get('flow'), '--mode', mode, ...t, '--out', path.join(runDir, t[1] ? `${mode}-${t[1].replace(/[:/]/g, 'x')}` : mode), ...passCapture]);
+  // <out>/<tanggal_jam>/<youtube|tiktok|16x9>/ berisi hasil jadi; bahan mentah (rekaman, screenshot, manifest) di raw/
+  const target = t[1] ? t[1].replace(/[:/]/g, 'x') : 'video';
+  const jobDir = path.join(runDir, mode === 'test' ? `test-${target}` : target);
+  const cap = node('capture.mjs', ['--flow', get('flow'), '--mode', mode, ...t, '--out', path.join(jobDir, 'raw'), ...passCapture]);
   const m = (cap.stdout || '').match(/→ (.+)\n/);
   if (!m) { exit = 1; continue; }
   if (cap.status === 2) exit = 2;
-  const outDir = m[1].trim();
-  if (!has('no-video')) node('make-video.mjs', [outDir, ...passVideo]);
-  node('build-docs.mjs', [outDir, ...passDocs]);
+  if (!has('no-video')) node('make-video.mjs', [jobDir, ...passVideo]);
+  node('build-docs.mjs', [jobDir, ...passDocs]);
 }
 console.log(`\nSemua hasil: ${path.resolve(runDir)}`);
 process.exit(exit);

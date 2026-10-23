@@ -1,6 +1,6 @@
 ---
 name: snapflow
-description: Buat dokumentasi aplikasi web otomatis — screenshot setiap halaman/langkah, video tutorial (demo) atau video uji coba (test) dengan auto-zoom mengikuti kursor, subtitle, dan rasio yang bisa diatur (16:9, 9:16, 1:1, 4:5, dll). Pakai saat user minta dokumentasi aplikasi, panduan pengguna bergambar, screenshot semua halaman, video tutorial/demo aplikasi, video untuk Reels/TikTok/Shorts/YouTube, atau rekaman pengujian alur aplikasi. Use for app documentation, user guides with screenshots, product demo videos, tutorial videos, or recorded E2E test runs.
+description: Buat dokumentasi aplikasi web otomatis — screenshot setiap halaman/langkah, video tutorial (demo) atau video uji coba (test) dengan auto-zoom mengikuti kursor, subtitle, dan rasio yang bisa diatur (16:9, 9:16, 1:1, 4:5, dll). Pakai otomatis (tanpa perlu disebut namanya) setiap kali user minta dokumentasi, panduan, manual, SOP, cara pakai, tutorial, atau demo — baik untuk seluruh aplikasi maupun untuk satu fitur/menu/halaman tertentu (mis. "buatkan dokumentasi fitur tambah barang", "buat panduan menu laporan", "video demo fitur checkout") — juga screenshot semua halaman, video untuk Reels/TikTok/Shorts/YouTube, atau rekaman pengujian alur aplikasi. Use automatically for app or feature documentation, user guides, how-to/tutorial/demo videos, screenshots of pages, or recorded E2E test runs.
 ---
 
 # Snapflow
@@ -8,7 +8,7 @@ description: Buat dokumentasi aplikasi web otomatis — screenshot setiap halama
 Mengubah **satu file flow JSON** menjadi:
 
 - `screenshots/*.png` — satu gambar bersih per halaman/langkah (tanpa kursor, caption, atau kotak penanda)
-- `tutorial-<rasio>.mp4` — video tutorial dengan kursor terlihat, efek klik, **auto-zoom mengikuti kursor** saat klik/isi form, kartu judul, subtitle, penanda "Langkah 2/6", logo brand
+- `tutorial-<rasio>.mp4` — video tutorial dengan kursor terlihat, efek klik, **auto-zoom mengikuti kursor** saat klik/isi form, kartu judul, subtitle, logo brand
 - `tutorial-<rasio>.srt/.vtt` — subtitle terpisah (gaya Netflix: maks 2 baris per tampilan)
 - `voiceover-<rasio>.txt` — naskah voice-over per langkah dengan timestamp; `voiceover-teks.txt` — teks saja, siap ditempel ke TTS AI
 - `chapters-<rasio>.txt` — chapter YouTube siap tempel ke deskripsi; `thumbnail-<rasio>.jpg` — sampul video; `clips-<rasio>/` — klip pendek per fitur (`--clips`)
@@ -49,7 +49,7 @@ Skill ini dijalankan **di folder aplikasi user** (root project). Semua perintah 
    - **Data pribadi:** cek tabel/form yang direkam. Bila ada email, NIK, nomor HP, alamat, atau nama orang sungguhan, tambahkan selectornya ke `"mask"` (di-blur di video dan screenshot).
    - **Gangguan dev:** Laravel Debugbar, overlay Vite/Next, dan banner cookie umum sudah disembunyikan otomatis. Elemen lain yang mengganggu (banner promo, chat widget, notifikasi) tambahkan ke `"hide"`.
    - **Brand:** cari logo aplikasi (`public/logo.png`, `public/images/logo*`, `resources/`, favicon PNG besar) dan warna utama (tailwind config, CSS variable `--primary`, warna navbar). Isi `"brand": { "logo": "<path relatif ke flow>", "color": "#hex" }`. Logo PNG transparan paling bagus. Isi `"version"` dari `composer.json`/`package.json` bila ada.
-   - Tambahkan `{ "focus": "<selector>", "caption": "..." }` untuk menyorot dan zoom area penting tanpa klik (grafik, total, notifikasi).
+   - Tambahkan `{ "focus": "<selector>" }` untuk menyorot dan zoom area penting tanpa klik (grafik, total, notifikasi).
    - Hindari aksi destruktif di aplikasi produksi (hapus, bayar, kirim massal). Gunakan staging atau data uji.
 4. **Jalankan dari folder aplikasi** (lihat Perintah di bawah). Mulai dengan satu rasio, periksa hasilnya, baru render rasio lain.
 5. **Periksa hasil** sebelum menyerahkan:
@@ -59,50 +59,53 @@ Skill ini dijalankan **di folder aplikasi user** (root project). Semua perintah 
    Jika selector gagal, perbaiki flow dan jalankan ulang. Jangan menebak hasil.
 6. **Serahkan** folder output (atau zip), plus ringkasan: jumlah langkah, rasio, durasi video, langkah yang gagal.
 
-**Versi bahasa lain** (mis. user minta versi Inggris): salin `snapflow/flow.json` menjadi `snapflow/flow.en.json`, terjemahkan `name`, `description`, serta `title`/`description`/`narration`/`caption` tiap langkah, set `"lang": "en"` dan tambahkan akhiran pada nama (mis. `"Inventory App (EN)"`) agar foldernya terpisah. Jalankan dengan flow tersebut. Label video ("Step 2/6") dan dokumen ikut berbahasa Inggris.
+**Versi bahasa lain** (mis. user minta versi Inggris): salin `snapflow/flow.json` menjadi `snapflow/flow.en.json`, terjemahkan `name`, `description`, serta `title`/`description`/`narration`/`caption` tiap langkah, set `"lang": "en"` dan tambahkan akhiran pada nama (mis. `"Inventory App (EN)"`) agar foldernya terpisah. Jalankan dengan flow tersebut. Label dokumen ikut berbahasa Inggris.
 
 ### Lokasi hasil
 
 Setiap kali `run.mjs` dijalankan, hasilnya masuk ke **folder baru bertanggal**, jadi hasil lama tidak tertimpa:
 
 ```
-<out>/<nama-app>/<YYYY-MM-DD_HHmm>/demo-16x9/
-                                  /demo-9x16/
+snapflow/                       # di root aplikasi
+├── flow.json                   # skenario rekaman (boleh di-commit)
+├── .env                        # akun login (jangan di-commit)
+└── 2026-10-24_1430/            # satu folder per run
+    ├── youtube/                # nama = preset (youtube, tiktok, reels…) atau rasio (16x9, 9x16)
+    │   ├── tutorial-16x9.mp4   # video jadi
+    │   ├── thumbnail-16x9.jpg  # sampul
+    │   ├── DOKUMENTASI.docx / .html
+    │   ├── voiceover-16x9.txt  # naskah narasi + timestamp
+    │   ├── voiceover-teks.txt  # teks narasi saja, untuk TTS
+    │   ├── clips-16x9/         # klip per fitur (bila --clips)
+    │   └── raw/                # bahan: video-raw, screenshots/, manifest.json, musik, subtitle .srt/.vtt, chapters
+    └── tiktok/
 ```
 
-Di folder aplikasi, susunannya:
+Mode test diberi awalan `test-` (mis. `test-youtube/`). Saat menyerahkan, sebut folder preset sebagai hasil jadi; isi `raw/` hanya bahan.
 
-```
-<root-aplikasi>/
-└── snapflow/
-    ├── flow.json      # skenario rekaman (boleh di-commit)
-    ├── .env           # akun login (jangan di-commit)
-    └── output/        # hasil (jangan di-commit)
-```
-
-Tambahkan `snapflow/output/` dan `snapflow/.env` ke `.gitignore` aplikasi bila memakai git.
+Tambahkan `snapflow/*/` dan `snapflow/.env` ke `.gitignore` aplikasi bila memakai git (flow.json tetap ikut).
 
 ## Perintah
 
 ```bash
 # Semua sekaligus (capture → video → dokumen), dua rasio
-node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --ratios 16:9,9:16 --burn-subs --music --sfx   # subtitle + musik + efek klik
-node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --ratios 16:9,9:16               # clean
+node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow --ratios 16:9,9:16 --burn-subs --music --sfx   # subtitle + musik + efek klik
+node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow --ratios 16:9,9:16               # clean
 
 # Pakai preset (youtube, desktop, laptop, docs, square, feed, reels, tiktok, shorts, tablet, playstore)
-node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --presets youtube,reels
+node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow --presets youtube,reels
 
 # Mode uji coba/percobaan: cepat, tanpa efek, laporan lulus/gagal, exit code 2 bila ada yang gagal
-node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --mode test
+node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow --mode test
 
 # Screenshot semua halaman otomatis (crawl link internal, logout/hapus dilewati)
-node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --crawl --no-video
+node <folder-skill>/scripts/run.mjs --flow snapflow/flow.json --out snapflow --crawl --no-video
 
 # Langkah terpisah
-node <folder-skill>/scripts/capture.mjs   --flow snapflow/flow.json --out snapflow/output --ratio 4:5 --width 1080 --viewport 430
-node <folder-skill>/scripts/make-video.mjs snapflow/output/<app>/<tanggal_jam>/demo-4x5 --speed 1.2 --intro "Cara Input Barang" --outro "Terima kasih" --burn-subs --gif
-node <folder-skill>/scripts/make-video.mjs snapflow/output/<app>/<tanggal_jam>/demo-16x9 --ratio 9:16 --name versi-reels   # bingkai ulang dari 16:9 (latar blur)
-node <folder-skill>/scripts/build-docs.mjs snapflow/output/<app>/<tanggal_jam>/demo-16x9 --embed --title "Panduan Pengguna"
+node <folder-skill>/scripts/capture.mjs   --flow snapflow/flow.json --out snapflow --ratio 4:5 --width 1080 --viewport 430
+node <folder-skill>/scripts/make-video.mjs snapflow/<tanggal_jam>/4x5 --speed 1.2 --intro "Cara Input Barang" --outro "Terima kasih" --burn-subs --gif
+node <folder-skill>/scripts/make-video.mjs snapflow/<tanggal_jam>/youtube --ratio 9:16 --name versi-reels   # bingkai ulang dari 16:9 (latar blur)
+node <folder-skill>/scripts/build-docs.mjs snapflow/<tanggal_jam>/youtube --embed --title "Panduan Pengguna"
 ```
 
 ### Opsi penting
@@ -112,12 +115,12 @@ node <folder-skill>/scripts/build-docs.mjs snapflow/output/<app>/<tanggal_jam>/d
 | `--ratio 9:16` / `--preset reels` | capture, run | Rasio bebas `W:H`. Viewport CSS + deviceScaleFactor dihitung otomatis supaya tajam |
 | `--width 1080` / `--viewport 390` | capture | Lebar piksel output / lebar layout CSS (390 = layout HP, 1280 = desktop) |
 | `--mode demo\|test` | capture, run | demo = lambat, kursor, ripple klik, zoom. test = cepat, laporan |
-| `--burn-subs` | make-video, run | Tanam subtitle gaya Netflix (naskah narasi, caption aksi di atas). Tanpa opsi ini video bersih |
+| `--burn-subs` | make-video, run | Tanam subtitle gaya Netflix (naskah narasi). Tanpa opsi ini video bersih |
 | `--no-zoom`, `--zoom-level 2`, `--zoom-ramp 0.5` | make-video, run | Kontrol auto-zoom |
 | `--clips` | make-video, run | Potong video jadi klip pendek per fitur (mengikuti chapter) di `clips-<rasio>/` untuk Reels/TikTok |
 | `--logo file.png`, `--brand-color #hex` | make-video, run | Menimpa `brand` di flow |
 | `--voiceover <folder>` | make-video, run | Narasi per langkah: `00.mp3` = pembuka, `01.mp3` = langkah 1, dst. (nama boleh `01-login.mp3`). Diletakkan tepat di awal langkahnya; musik otomatis mengecil saat narasi. Ada peringatan bila audio lebih panjang dari langkahnya |
-| `--music [lofi\|corporate\|file]`, `--sfx` | make-video, run | Musik latar instrumental dibuat otomatis (sintesis, bebas royalti) sepanjang video, fade in/out, mengecil saat voice-over. Bisa juga file musik sendiri. `--sfx`: bunyi "tik" lembut di setiap klik |
+| `--music [lofi\|corporate\|file]`, `--sfx` | make-video, run | Musik latar instrumental dibuat otomatis (sintesis, bebas royalti) sepanjang video, fade in/out, mengecil saat voice-over. Bisa juga file musik sendiri. `--sfx`: bunyi klik mouse di setiap klik |
 | `--speed`, `--intro`, `--outro`, `--gif` | make-video, run | Pasca-produksi |
 | `--embed` | build-docs, run | HTML satu file (gambar di-embed) |
 | `--headed` | capture | Tampilkan browser (debug) |
@@ -136,4 +139,9 @@ Atur di flow: `"zoom": { "level": 1.8, "actions": ["click","fill"] }`. Per aksi 
 
 - Hanya aplikasi **web** (termasuk Flutter Web dan PWA). Aplikasi Android native butuh emulator dan screen recorder, di luar cakupan skrip ini.
 - Login dengan CAPTCHA/OTP: login manual sekali dengan `--headed`, simpan sesi (`{ "saveSession": "auth.json" }`), lalu pakai `"storageState": "auth.json"`.
-- Voice-over tidak dibuat otomatis. Alurnya: render sekali → buat audio tiap bagian dari `voiceover-<rasio>.txt` (TTS AI atau rekam sendiri, nama file sesuai tanda `→ 01.mp3`) → render ulang video saja: `node <folder-skill>/scripts/make-video.mjs <folder-hasil> --voiceover vo/ --burn-subs --music --sfx` (tanpa merekam ulang browser). Folder voice-over yang sama bisa dipakai untuk semua rasio.
+- Voice-over tidak dibuat otomatis. Alurnya: render sekali → user membuat audio tiap bagian dari `voiceover-<rasio>.txt` (TTS AI atau rekam sendiri, nama file sesuai tanda `→ 01.mp3`) → render ulang video saja (tanpa merekam ulang browser). Folder voice-over yang sama bisa dipakai untuk semua rasio.
+  **Saat menggabungkan voice-over, selalu tanyakan dulu ke user apakah subtitle ditanam**, karena panjang audio bisa berbeda dari teks naskah sehingga subtitle terasa tidak pas. Jalankan make-video dengan peringatan yang muncul ("lebih panjang dari langkahnya") dilaporkan ke user:
+  ```bash
+  node <folder-skill>/scripts/make-video.mjs <folder-hasil> --voiceover vo/ --music --sfx              # tanpa subtitle
+  node <folder-skill>/scripts/make-video.mjs <folder-hasil> --voiceover vo/ --music --sfx --burn-subs  # dengan subtitle
+  ```

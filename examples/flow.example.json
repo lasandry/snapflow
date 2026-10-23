@@ -25,7 +25,7 @@
     {
       "title": "Dashboard",
       "description": "Dashboard menampilkan ringkasan stok: total barang, stok menipis, dan barang masuk hari ini.",
-      "actions": [{ "focus": ".grid .stat:nth-child(2)", "duration": 1800, "caption": "Perhatikan jumlah stok menipis" }]
+      "actions": [{ "focus": ".grid .stat:nth-child(2)", "duration": 1800 }]
     },
     {
       "title": "Form Tambah Barang",

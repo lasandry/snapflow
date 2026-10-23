@@ -11,7 +11,7 @@ Ringkas:
 2b. Akun login: cari sendiri di `.env`, seeder, factory, README, atau tes aplikasi; tanya user hanya bila tidak ketemu. Lihat `SKILL.md`.
 3. Jalankan: `node scripts/run.mjs --flow flows/<app>.json --ratios 16:9,9:16 --burn-subs`
    (atau `--mode test` untuk uji coba, `--crawl --no-video` untuk screenshot semua halaman).
-4. Verifikasi hasil di `output/<app>/<tanggal_jam>/<mode>-<rasio>/` (folder baru tiap run): lihat screenshot dan beberapa frame video, lalu cek `manifest.json` → `summary`.
+4. Verifikasi hasil di `snapflow/<tanggal_jam>/<preset atau rasio>/` (folder baru tiap run; bahan mentah di `raw/`): lihat screenshot dan beberapa frame video, lalu cek `manifest.json` → `summary`.
 5. Laporkan ke user: file yang dihasilkan, rasio, durasi, dan langkah yang gagal (jika ada).
 
 Aturan:

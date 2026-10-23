@@ -3,7 +3,7 @@
 Skill lintas-AI untuk membuat dokumentasi aplikasi web secara otomatis.
 
 - Screenshot bersih setiap halaman atau langkah
-- Video tutorial: kursor, ketikan natural, auto-zoom mengikuti kursor, subtitle gaya Netflix, penanda langkah, logo brand, musik latar otomatis, bunyi klik, voice-over
+- Video tutorial: kursor, ketikan natural, auto-zoom mengikuti kursor, subtitle gaya Netflix, logo brand, musik latar otomatis, bunyi klik, voice-over
 - Siap YouTube dan Reels: chapter otomatis, thumbnail, dan klip pendek per fitur
 - Data pribadi di-blur dan gangguan saat develop (Debugbar, banner cookie) disembunyikan otomatis
 - Video uji coba: berjalan cepat, setiap langkah diverifikasi, laporan lulus/gagal
@@ -103,7 +103,7 @@ cp examples/.env.example examples/.env
 npm run demo
 ```
 
-Instalasi berhasil bila muncul `Selesai: 6/6 langkah ok`. Hasilnya ada di `output/gudang-demo/<tanggal_jam>/`.
+Instalasi berhasil bila muncul `Selesai: 6/6 langkah ok`. Hasilnya ada di `output/<tanggal_jam>/`.
 
 ---
 
@@ -151,31 +151,29 @@ Yang dikerjakan AI:
 
 ## 3. Hasil
 
-Hasil disimpan di folder aplikasi Anda, di `snapflow/output/`. Setiap run membuat folder baru bertanggal, jadi hasil lama tidak tertimpa:
+Hasil disimpan di folder `snapflow/` di dalam aplikasi Anda. Setiap run membuat folder bertanggal, isinya satu folder per platform:
 
 ```
-snapflow/output/aplikasi-saya/2026-10-23_1430/
-├── demo-16x9/                    # YouTube / dokumentasi
-│   ├── tutorial-16x9.mp4         # video final (zoom, subtitle, musik, efek klik)
-│   ├── tutorial-16x9.srt / .vtt  # subtitle terpisah
-│   ├── voiceover-16x9.txt        # naskah narasi + timestamp + nama file audio
-│   ├── voiceover-teks.txt        # teks narasi saja, untuk TTS AI
-│   ├── musik-lofi.mp3            # musik latar yang dibuat
-│   ├── chapters-16x9.txt         # chapter YouTube, tempel ke deskripsi video
-│   ├── thumbnail-16x9.jpg        # sampul video
-│   ├── clips-16x9/               # klip pendek per fitur (bila diminta)
-│   ├── DOKUMENTASI.docx          # panduan Word dengan sampul + daftar isi (berdiri sendiri)
-│   ├── DOKUMENTASI.html          # buka di browser, Ctrl+P untuk simpan PDF
-│   ├── screenshots/              # gambar tiap langkah
-│   ├── video-raw.mp4             # rekaman mentah
-│   └── manifest.json             # data teknis
-└── demo-9x16/                    # Reels / TikTok / Shorts (isi sama)
+snapflow/
+├── flow.json                     # skenario rekaman
+├── .env                          # akun login (jangan di-commit)
+└── 2026-10-24_1430/
+    ├── youtube/
+    │   ├── tutorial-16x9.mp4     # video jadi (zoom, subtitle, musik, efek suara)
+    │   ├── thumbnail-16x9.jpg    # sampul video
+    │   ├── DOKUMENTASI.docx      # panduan Word dengan sampul + daftar isi
+    │   ├── DOKUMENTASI.html      # versi web, satu file, Ctrl+P untuk simpan PDF
+    │   ├── voiceover-16x9.txt    # naskah narasi + timestamp + nama file audio
+    │   ├── voiceover-teks.txt    # teks narasi saja, untuk TTS AI
+    │   └── raw/                  # bahan: rekaman mentah, screenshot, subtitle .srt,
+    │                             #        chapter YouTube, file musik, manifest
+    └── tiktok/                   # isi sama, versi 9:16
 ```
 
 URL aplikasi tidak dicantumkan di dokumen maupun manifest. Bila memakai git, tambahkan ke `.gitignore` aplikasi:
 
 ```
-snapflow/output/
+snapflow/*/
 snapflow/.env
 ```
 
@@ -192,7 +190,7 @@ snapflow/.env
 | `lofi` (default) | santai, 80 BPM | tutorial, dokumentasi |
 | `corporate` | ceria, 108 BPM | demo produk, promo, Reels |
 
-**Efek klik**: bunyi "tik" lembut tepat saat kursor mengklik.
+**Efek suara**: bunyi klik mouse tepat saat kursor mengklik.
 
 **Logo & warna brand**: AI mencari logo dan warna utama aplikasi sendiri, lalu memakainya di kartu pembuka, watermark video, thumbnail, dan sampul Word.
 
@@ -212,7 +210,7 @@ Pakai skill snapflow. Buatkan juga versi bahasa Inggris dari video tutorial tadi
    Pertama, masuk dengan email dan password akun Anda.
    ```
 2. Buat audionya dengan TTS AI (ElevenLabs, dll) atau rekam sendiri, lalu simpan ke satu folder: `vo/00.mp3`, `vo/01.mp3`, …
-3. Minta AI menggabungkannya:
+3. Minta AI menggabungkannya. AI akan bertanya dulu apakah subtitle ikut ditanam, karena panjang suara bisa berbeda dari teks naskah:
 
    ```text
    Pakai skill snapflow. Gabungkan voice-over di folder vo ke video tutorial terakhir, versi 16:9 dan 9:16.

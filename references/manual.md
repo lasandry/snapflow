@@ -44,7 +44,7 @@ Edit `snapflow/flow.json` sesuai aplikasi Anda. Format lengkap ada di [flow-sche
         { "waitForUrl": "dashboard" }
       ] },
     { "title": "Dashboard", "description": "Ringkasan data aplikasi.",
-      "actions": [ { "focus": ".card-total", "caption": "Total data" } ] },
+      "actions": [ { "focus": ".card-total" } ] },
     { "title": "Tambah Data", "url": "/data/create" }
   ]
 }
@@ -64,7 +64,7 @@ APP_PASSWORD=password
 Bila memakai git, tambahkan ke `.gitignore` aplikasi:
 
 ```
-snapflow/output/
+snapflow/*/
 snapflow/.env
 ```
 
@@ -72,19 +72,19 @@ snapflow/.env
 
 ```bash
 # Tutorial lengkap: 16:9 + 9:16, subtitle, musik, efek klik
-node ~/.claude/skills/snapflow/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --ratios 16:9,9:16 --burn-subs --music --sfx
+node ~/.claude/skills/snapflow/scripts/run.mjs --flow snapflow/flow.json --out snapflow --ratios 16:9,9:16 --burn-subs --music --sfx
 
 # Video clean (tanpa teks), musik gaya corporate
-node ~/.claude/skills/snapflow/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --presets youtube,reels --music corporate --sfx
+node ~/.claude/skills/snapflow/scripts/run.mjs --flow snapflow/flow.json --out snapflow --presets youtube,reels --music corporate --sfx
 
 # Uji coba (cepat + laporan lulus/gagal)
-node ~/.claude/skills/snapflow/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --mode test
+node ~/.claude/skills/snapflow/scripts/run.mjs --flow snapflow/flow.json --out snapflow --mode test
 
 # Hanya screenshot semua halaman (crawl link internal)
-node ~/.claude/skills/snapflow/scripts/run.mjs --flow snapflow/flow.json --out snapflow/output --crawl --no-video
+node ~/.claude/skills/snapflow/scripts/run.mjs --flow snapflow/flow.json --out snapflow --crawl --no-video
 ```
 
-Hasilnya ada di `snapflow/output/<nama-app>/<tanggal_jam>/`.
+Hasilnya ada di `snapflow/<tanggal_jam>/<youtube|tiktok|...>/`.
 
 ## 3. Opsi
 
@@ -94,7 +94,7 @@ Hasilnya ada di `snapflow/output/<nama-app>/<tanggal_jam>/`.
 | `--mode demo` / `--mode test` | demo = video tutorial; test = cepat + laporan |
 | `--burn-subs` | Tanam subtitle gaya Netflix. Tanpa opsi ini video bersih (subtitle tetap ada sebagai `.srt`) |
 | `--music` / `--music corporate` / `--music lagu.mp3` | Musik latar dibuat otomatis sepanjang video (default `lofi`), atau file sendiri |
-| `--sfx` | Bunyi "tik" lembut di setiap klik |
+| `--sfx` | Bunyi klik mouse di setiap klik |
 | `--clips` | Klip pendek per fitur di `clips-<rasio>/` (untuk Reels/TikTok) |
 | `--logo file.png` / `--brand-color #hex` | Logo dan warna brand (menimpa `brand` di flow) |
 | `--voiceover <folder>` | Gabungkan narasi `00.mp3`, `01.mp3`, … (lihat bagian 4) |
@@ -116,7 +116,7 @@ Hasilnya ada di `snapflow/output/<nama-app>/<tanggal_jam>/`.
 3. Buat audionya dengan TTS AI (ElevenLabs, dll) atau rekam sendiri, lalu simpan ke satu folder: `vo/00.mp3`, `vo/01.mp3`, …
 4. Render ulang video saja, tanpa merekam browser lagi:
    ```bash
-   node ~/.claude/skills/snapflow/scripts/make-video.mjs snapflow/output/aplikasi-saya/2026-10-23_1430/demo-16x9 --voiceover vo/ --burn-subs --music --sfx
+   node ~/.claude/skills/snapflow/scripts/make-video.mjs snapflow/2026-10-24_1430/youtube --voiceover vo/ --burn-subs --music --sfx
    ```
 
 Narasi diletakkan tepat di awal langkahnya, dan musik otomatis mengecil saat narasi berbicara. Folder `vo/` yang sama bisa dipakai untuk rasio 9:16.
@@ -138,7 +138,7 @@ node ~/.claude/skills/snapflow/scripts/capture.mjs --flow snapflow/flow.json --r
 Untuk mengubah video yang sudah jadi ke rasio lain tanpa merekam ulang (latar blur):
 
 ```bash
-node ~/.claude/skills/snapflow/scripts/make-video.mjs snapflow/output/aplikasi-saya/2026-10-23_1430/demo-16x9 --ratio 9:16 --name versi-reels
+node ~/.claude/skills/snapflow/scripts/make-video.mjs snapflow/2026-10-24_1430/youtube --ratio 9:16 --name versi-reels
 ```
 
 Hasil terbaik tetap didapat dengan merekam ulang di rasio target, karena layout aplikasi ikut menyesuaikan.
@@ -188,7 +188,7 @@ node ~/.claude/skills/snapflow/scripts/make-video.mjs <folder-hasil> --zoom-leve
 
 - **Data pribadi**: tambahkan selector ke `"mask"` di flow, mis. `"mask": ["td.email", "[name=nik]"]`. Bagian itu di-blur di video dan screenshot.
 - **Gangguan saat develop**: Laravel Debugbar, overlay Vite/Next/Nuxt, dan banner cookie umum disembunyikan otomatis. Tambah elemen lain lewat `"hide": [".chat-widget"]`.
-- **Logo & warna**: `"brand": { "logo": "logo.png", "color": "#2457F5" }` dipakai di kartu pembuka/penutup, watermark video, thumbnail, label langkah, dan sampul Word.
+- **Logo & warna**: `"brand": { "logo": "logo.png", "color": "#2457F5" }` dipakai di kartu pembuka/penutup, watermark video, thumbnail, dan sampul Word.
 - **Versi bahasa lain**: salin flow menjadi `flow.en.json`, terjemahkan teksnya, set `"lang": "en"`.
 - **Login dengan OTP/CAPTCHA**: jalankan sekali dengan `--headed` dan set `"timeout": 120000`, login manual, pakai `{ "waitForUrl": "dashboard" }` lalu `{ "saveSession": "auth.json" }`. Run berikutnya cukup memakai `"storageState": "auth.json"`.
 - **Data contoh**: gunakan database staging/seeder agar screenshot rapi dan tidak membocorkan data asli.
