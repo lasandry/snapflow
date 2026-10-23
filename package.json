@@ -1,0 +1,28 @@
+{
+  "name": "snapflow",
+  "version": "1.0.0",
+  "description": "Dokumentasi aplikasi otomatis: screenshot per halaman, video tutorial/uji coba dengan auto-zoom, rasio bebas.",
+  "license": "MIT",
+  "author": "lasandry",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lasandry/snapflow.git"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "postinstall": "playwright install chromium",
+    "demo": "node scripts/run.mjs --flow examples/flow.example.json --ratios 16:9,9:16 --burn-subs",
+    "capture": "node scripts/capture.mjs",
+    "video": "node scripts/make-video.mjs",
+    "docs": "node scripts/build-docs.mjs",
+    "run": "node scripts/run.mjs"
+  },
+  "dependencies": {
+    "docx": "^9.14.0",
+    "playwright": "^1.48.0"
+  }
+}

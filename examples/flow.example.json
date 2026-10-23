@@ -1,0 +1,53 @@
+{
+  "name": "Gudang Demo",
+  "description": "Panduan singkat: masuk, melihat dashboard, dan menambah barang baru.",
+  "baseUrl": "http://localhost:8765/",
+  "lang": "id",
+  "format": { "preset": "youtube" },
+  "zoom": { "enabled": true, "level": 1.8 },
+  "timing": { "typeDelay": 55, "pauseAfterAction": 600, "pauseAfterStep": 1500 },
+  "steps": [
+    {
+      "title": "Halaman Masuk",
+      "description": "Buka aplikasi. Halaman pertama yang tampil adalah form masuk.",
+      "url": "/"
+    },
+    {
+      "title": "Masuk ke Aplikasi",
+      "description": "Isi email dan kata sandi, lalu klik tombol Masuk.",
+      "actions": [
+        { "fill": "#email", "value": "${env:DEMO_EMAIL}" },
+        { "fill": "#password", "value": "${env:DEMO_PASSWORD}" },
+        { "click": "#btn-login" },
+        { "expectText": "Total barang" }
+      ]
+    },
+    {
+      "title": "Dashboard",
+      "description": "Dashboard menampilkan ringkasan stok: total barang, stok menipis, dan barang masuk hari ini.",
+      "actions": [{ "focus": ".grid .stat:nth-child(2)", "duration": 1800, "caption": "Perhatikan jumlah stok menipis" }]
+    },
+    {
+      "title": "Form Tambah Barang",
+      "description": "Klik tombol + Tambah Barang untuk membuka form.",
+      "actions": [{ "click": "text=+ Tambah Barang" }]
+    },
+    {
+      "title": "Mengisi Data Barang",
+      "description": "Isi nama, pilih kategori, dan masukkan jumlah barang.",
+      "actions": [
+        { "fill": "#nama", "value": "Laptop Lenovo" },
+        { "select": "#kategori", "value": "Elektronik" },
+        { "fill": "#jumlah", "value": "10" }
+      ]
+    },
+    {
+      "title": "Menyimpan Barang",
+      "description": "Klik Simpan. Barang baru muncul paling atas di Daftar Barang.",
+      "actions": [
+        { "click": "#btn-simpan" },
+        { "expectText": "Barang berhasil disimpan" }
+      ]
+    }
+  ]
+}

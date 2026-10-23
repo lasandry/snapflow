@@ -1,0 +1,14 @@
+{
+  "youtube":   { "ratio": "16:9", "viewportWidth": 1280, "outputWidth": 1920, "mobile": false },
+  "desktop":   { "ratio": "16:9", "viewportWidth": 1440, "outputWidth": 1920, "mobile": false },
+  "hd":        { "ratio": "16:9", "viewportWidth": 1280, "outputWidth": 1280, "mobile": false },
+  "laptop":    { "ratio": "16:10", "viewportWidth": 1440, "outputWidth": 1920, "mobile": false },
+  "docs":      { "ratio": "4:3",  "viewportWidth": 1280, "outputWidth": 1600, "mobile": false },
+  "square":    { "ratio": "1:1",  "viewportWidth": 900,  "outputWidth": 1080, "mobile": false },
+  "feed":      { "ratio": "4:5",  "viewportWidth": 430,  "outputWidth": 1080, "mobile": true },
+  "reels":     { "ratio": "9:16", "viewportWidth": 390,  "outputWidth": 1080, "mobile": true },
+  "tiktok":    { "ratio": "9:16", "viewportWidth": 390,  "outputWidth": 1080, "mobile": true },
+  "shorts":    { "ratio": "9:16", "viewportWidth": 390,  "outputWidth": 1080, "mobile": true },
+  "tablet":    { "ratio": "3:4",  "viewportWidth": 820,  "outputWidth": 1536, "mobile": true },
+  "playstore": { "ratio": "9:16", "viewportWidth": 412,  "outputWidth": 1080, "mobile": true }
+}
