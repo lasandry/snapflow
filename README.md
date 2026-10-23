@@ -3,7 +3,7 @@
 Skill lintas-AI untuk membuat dokumentasi aplikasi web secara otomatis.
 
 - Screenshot bersih setiap halaman atau langkah
-- Video tutorial: kursor, ketikan natural, auto-zoom mengikuti kursor, subtitle gaya Netflix, logo brand, musik latar otomatis, bunyi klik, voice-over
+- Video tutorial tajam (direkam 2x resolusi): kursor gaya macOS, ketikan natural, auto-zoom mengikuti kursor, subtitle gaya Netflix, logo brand, musik latar otomatis, bunyi klik mouse
 - Siap YouTube dan Reels: chapter otomatis, thumbnail, dan klip pendek per fitur
 - Data pribadi di-blur dan gangguan saat develop (Debugbar, banner cookie) disembunyikan otomatis
 - Video uji coba: berjalan cepat, setiap langkah diverifikasi, laporan lulus/gagal
@@ -181,7 +181,11 @@ snapflow/.env
 
 ## 4. Fitur video & dokumen
 
-**Subtitle**: gaya Netflix. Teks putih tebal dengan outline hitam, maksimal 2 baris. Di 9:16 posisinya dinaikkan agar tidak tertutup tombol Reels/TikTok. Bila memilih video clean, subtitle tetap tersedia sebagai file `.srt`.
+**Kualitas gambar**: browser merekam 2x resolusi output (mis. 3840×2160 untuk video 1080p) lalu diperkecil, sehingga teks tetap tajam walau kamera sedang zoom.
+
+**Kursor**: di desktop berbentuk panah ala macOS dan berubah jadi kursor teks (I-beam) saat berada di kolom isian. Di versi HP (TikTok/Reels) berupa lingkaran sentuhan.
+
+**Subtitle**: gaya Netflix. Teks putih tebal dengan outline hitam, ukuran secukupnya, maksimal 2 baris. Di 9:16 posisinya dinaikkan agar tidak tertutup tombol Reels/TikTok. Bila memilih video clean, subtitle tetap tersedia sebagai file `.srt`.
 
 **Musik**: instrumental dibuat otomatis saat render (bebas royalti, aman diunggah), panjangnya mengikuti video.
 
