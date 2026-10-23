@@ -46,7 +46,8 @@ const isTest = m.mode === 'test';
 // URL aplikasi (localhost/staging) sengaja tidak dicantumkan di dokumen.
 const meta = `${t.gen} · ${date} · ${t.mode}: ${t[m.mode] || m.mode} · ${t.ratio} ${m.format.ratio}`;
 const pngSize = (buf) => ({ w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) });
-const maxW = m.format.output.height > m.format.output.width ? 280 : 600; // px pada A4 (≈ lebar area teks)
+// ukuran gambar langkah (px pada A4, area teks ±600×930): dibatasi tinggi agar 2 langkah muat satu halaman
+const maxW = 600, maxH = 340;
 const P = (text, o = {}) => new Paragraph({ ...o, children: [new TextRun({ text: String(text), ...(o.run || {}) })] });
 const C = (text, run = {}, o = {}) => P(text, { alignment: AlignmentType.CENTER, ...o, run });
 // halaman sampul: logo (PNG), judul, deskripsi, versi & tanggal
@@ -63,7 +64,7 @@ if (m.description) body.push(C(m.description, { size: 26, color: '444444' }, { s
 if (m.version) body.push(C(`${t.version} ${m.version}`, { color: '6B6F7B' }));
 body.push(C(`${t.date}: ${day}`, { color: '6B6F7B' }));
 // daftar isi otomatis (Word memperbarui saat dokumen dibuka)
-body.push(P(t.toc, { heading: HeadingLevel.HEADING_1, pageBreakBefore: true }));
+body.push(P(t.toc, { pageBreakBefore: true, spacing: { after: 200 }, run: { bold: true, size: 32, color: accent } })); // bukan Heading agar tidak ikut tercantum di daftar isi
 body.push(new TableOfContents(t.toc, { hyperlink: true, headingStyleRange: '1-1' }));
 body.push(P(t.tocHint, { run: { color: '9A9EAB', size: 16, italics: true } }));
 body.push(P(meta, { run: { color: '9A9EAB', size: 16 } }));
@@ -75,13 +76,14 @@ if (isTest) {
     ...m.steps.map((s) => new TableRow({ children: [cell(s.index), cell(s.title), cell(s.status === 'ok' ? t.ok : t.failed, s.status === 'ok' ? '15803D' : 'B91C1C'), cell(s.error || '')] })),
   ] }));
 }
+// langkah mengalir ±2 per halaman; judul + keterangan + gambar dijaga satu halaman (keepNext), tanpa page break per langkah
 for (const s of m.steps) {
-  body.push(P(`${s.index}. ${s.title}`, { heading: HeadingLevel.HEADING_1, pageBreakBefore: s.index > 1 ? !!s.screenshot : !isTest }));
-  if (s.description) body.push(P(s.description));
+  body.push(P(`${s.index}. ${s.title}`, { heading: HeadingLevel.HEADING_1, keepNext: true, pageBreakBefore: s.index === 1, spacing: { before: s.index === 1 ? 0 : 360, after: 80 } }));
+  if (s.description) body.push(P(s.description, { keepNext: !!s.screenshot, spacing: { after: 120 } }));
   if (s.screenshot) {
     const data = fs.readFileSync(path.join(dir, s.screenshot));
-    const { w, h } = pngSize(data); const k = Math.min(1, maxW / w);
-    body.push(new Paragraph({ children: [new ImageRun({ type: 'png', data, transformation: { width: Math.round(w * k), height: Math.round(h * k) } })] }));
+    const { w, h } = pngSize(data); const k = Math.min(maxW / w, maxH / h);
+    body.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: [new ImageRun({ type: 'png', data, transformation: { width: Math.round(w * k), height: Math.round(h * k) } })] }));
   }
   if (s.error) body.push(P(`⚠ ${s.error}`, { run: { color: 'B91C1C' } }));
 }

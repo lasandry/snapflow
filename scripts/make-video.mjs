@@ -29,6 +29,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { makeMusic } from './make-music.mjs';
+import { makeThumbnail } from './thumbnail.mjs';
 
 function parseArgs(argv) {
   const a = { _: [] };
@@ -56,7 +57,7 @@ function findFont() {
 const esc = (s) => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\u2019").replace(/:/g, '\\:').replace(/%/g, '\\%');
 const escPath = (p) => p.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'");
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   // root = folder hasil jadi; dir = folder kerja (bahan mentah di root/raw, atau root untuk hasil versi lama)
   const root = path.resolve(args._[0] || '.');
@@ -303,16 +304,15 @@ function main() {
   const pick = shots.find((s) => s.index === Number(m.thumbnail)) || shots[Math.min(1, shots.length - 1)];
   if (pick) {
     const thumb = path.join(root, `thumbnail-${tag}.jpg`);
-    const tW = H > W ? 1080 : 1280, tH = even(tW * H / W);
-    const tfs = Math.round(Math.min(tW, tH) / (H > W ? 9 : 8.5)), tLines = wrap(introText || m.name, H > W ? 14 : 22), tLH = Math.round(tfs * 1.2);
-    const band = Math.round(tH * (H > W ? 0.38 : 0.45)), y0 = tH - band;
-    let tf = `[0:v]scale=${tW}:${tH}:force_original_aspect_ratio=increase,crop=${tW}:${tH},` +
-      `drawbox=x=0:y=${y0}:w=iw:h=${band}:color=black@0.72:t=fill,drawbox=x=0:y=${y0}:w=iw:h=${Math.max(6, Math.round(tH * 0.012))}:color=0x${brandColor}:t=fill`;
-    tLines.forEach((ln, k) => { tf += `,drawtext=${fontArg}text='${esc(ln)}':fontcolor=white:fontsize=${tfs}:x=${Math.round(tW * 0.06)}:y=${y0 + Math.round((band - tLines.length * tLH) / 2) + k * tLH}`; });
-    const tIn = ['-i', path.join(dir, pick.screenshot)];
-    if (logo) { tIn.push('-i', logo); tf += `[bg];[1:v]scale=${even(tW * (H > W ? 0.16 : 0.09))}:-2[lg];[bg][lg]overlay=${Math.round(tW * 0.05)}:${Math.round(tH * 0.05)}`; }
-    const tr = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', ...tIn, '-filter_complex', tf, '-frames:v', '1', '-q:v', '3', thumb], { stdio: 'inherit' });
-    if (tr.status === 0) console.log(`Thumbnail: ${thumb}`);
+    try {
+      await makeThumbnail({
+        shot: path.join(dir, pick.screenshot), title: introText || m.name, app: m.name,
+        label: m.mode === 'test' ? (en ? 'TEST RUN' : 'UJI COBA') : 'TUTORIAL',
+        meta: en ? `${m.steps.length} easy steps` : `${m.steps.length} langkah mudah`,
+        color: brandColor, light: lightBrand, logo, portrait: H > W, out: thumb,
+      });
+      console.log(`Thumbnail: ${thumb}`);
+    } catch (e) { console.warn(`Thumbnail gagal dibuat: ${e.message.split('\n')[0]}`); }
   }
 
   // ---------- Klip pendek per fitur (--clips), mengikuti chapter ----------
@@ -405,4 +405,4 @@ function wrap(text, max, limit = 4) {
   return lines.slice(0, limit);
 }
 
-main();
+main().catch((e) => { console.error(e); process.exit(1); });
